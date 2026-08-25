@@ -105,10 +105,16 @@ router.post("/", async (req, res) => {
 router.patch("/:expenseId", async (req, res) => {
     try {
         const { expenseId } = req.params;
-        const { category } = req.body;
         const userId = req.user.userId;
 
-        // Make sure the expense belongs to the logged-in user
+        const {
+            amount,
+            category,
+            paymentMethod,
+            notes,
+            expenseDate
+        } = req.body;
+
         const expenseResult = await pool.query(
             `
             SELECT id
@@ -125,61 +131,88 @@ router.patch("/:expenseId", async (req, res) => {
             });
         }
 
-        // Remove the category
-        if (category === null) {
-            const result = await pool.query(
-                `
-                UPDATE expenses
-                SET category_id = NULL
-                WHERE id = $1
-                  AND user_id = $2
-                RETURNING *;
-                `,
-                [expenseId, userId]
-            );
-
-            return res.json(result.rows[0]);
-        }
-
-        // Find the user's category, ignoring capitalization
-        const categoryResult = await pool.query(
-            `
-            SELECT id
-            FROM categories
-            WHERE user_id = $1
-              AND LOWER(name) = LOWER($2);
-            `,
-            [userId, category]
-        );
-
         let categoryId;
 
-        if (categoryResult.rows.length > 0) {
-            categoryId = categoryResult.rows[0].id;
-        } else {
-            // Create the category if it doesn't exist
-            const newCategory = await pool.query(
+        if (category === null) {
+            categoryId = null;
+
+        } else if (category !== undefined) {
+            const categoryResult = await pool.query(
                 `
-                INSERT INTO categories (user_id, name)
-                VALUES ($1, $2)
-                RETURNING id;
+                SELECT id
+                FROM categories
+                WHERE user_id = $1
+                  AND LOWER(name) = LOWER($2);
                 `,
                 [userId, category]
             );
 
-            categoryId = newCategory.rows[0].id;
+            if (categoryResult.rows.length > 0) {
+                categoryId = categoryResult.rows[0].id;
+            } else {
+                const newCategory = await pool.query(
+                    `
+                    INSERT INTO categories (user_id, name)
+                    VALUES ($1, $2)
+                    RETURNING id;
+                    `,
+                    [userId, category]
+                );
+
+                categoryId = newCategory.rows[0].id;
+            }
         }
 
-        // Update only this expense
+        const updates = [];
+        const values = [];
+
+        let index = 1;
+
+        if (amount !== undefined) {
+            updates.push(`amount = $${index++}`);
+            values.push(amount);
+        }
+
+        if (category !== undefined) {
+            updates.push(`category_id = $${index++}`);
+            values.push(categoryId);
+        }
+
+        if (paymentMethod !== undefined) {
+            updates.push(`payment_method = $${index++}`);
+            values.push(paymentMethod);
+        }
+
+        if (notes !== undefined) {
+            updates.push(`notes = $${index++}`);
+            values.push(notes);
+        }
+
+        if (expenseDate !== undefined) {
+            updates.push(`expense_date = $${index++}`);
+            values.push(expenseDate);
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({
+                error: "No fields provided to update"
+            });
+        }
+
+        updates.push("updated_at = CURRENT_TIMESTAMP");
+
+        values.push(expenseId);
+        values.push(userId);
+
         const result = await pool.query(
             `
             UPDATE expenses
-            SET category_id = $1
-            WHERE id = $2
-              AND user_id = $3
+            SET ${updates.join(", ")}
+            WHERE id = $${index}
+              AND user_id = $${index + 1}
             RETURNING *;
             `,
-            [categoryId, expenseId, userId]
+            values
         );
 
         res.json(result.rows[0]);
