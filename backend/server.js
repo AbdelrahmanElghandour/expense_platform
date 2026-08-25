@@ -2,6 +2,7 @@ const express = require("express");
 const expenseRouter = require("./src/routes/expenses"); 
 
 const authRouter = require("./src/routes/auth"); 
+const authenticateToken = require("./src/middleware/auth");
 
 const app = express();
 
@@ -11,7 +12,7 @@ app.get("/", (req, res) => {
     res.send("Hello from Express Platform!");
 });
 
-app.use("/expenses", expenseRouter); // whenever a request starts with /expenses, send it to expenseRouter
+app.use("/expenses", authenticateToken, expenseRouter);
 
 app.use("/auth", authRouter);
 
