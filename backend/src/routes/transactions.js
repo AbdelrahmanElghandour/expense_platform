@@ -6,6 +6,8 @@ const {
     normalizeTransactionData,
     validatePatchTransaction
 } = require("../validation/transactionValidation");
+const { resolveCategoryId } =
+    require("../services/categoryService");
 
 
 const router = express.Router();
@@ -58,33 +60,11 @@ router.post("/", async (req, res) => {
             notes,
             transactionDate
         } = normalizeTransactionData(req.body);
-        
-        const categoryResult = await pool.query(
-            `
-            SELECT id
-            FROM categories
-            WHERE user_id = $1
-              AND LOWER(name) = LOWER($2);
-            `,
-            [req.user.userId, category]
+
+        const categoryId = await resolveCategoryId(
+            req.user.userId,
+            category
         );
-
-        let categoryId;
-
-        if (categoryResult.rows.length > 0) {
-            categoryId = categoryResult.rows[0].id;
-        } else {
-            const newCategory = await pool.query(
-                `
-                INSERT INTO categories (user_id, name)
-                VALUES ($1, $2)
-                RETURNING id;
-                `,
-                [req.user.userId, category]
-            );
-
-            categoryId = newCategory.rows[0].id;
-        }
 
         const result = await pool.query(
             `
@@ -139,11 +119,12 @@ router.patch("/:transactionId", async (req, res) => {
             type,
             amount,
             category,
-            paymentMethod,
+            payment_method,
             notes,
             transactionDate
         } = normalizeTransactionData(req.body);
 
+        // Make sure the transaction belongs to the logged-in user
         const transactionResult = await pool.query(
             `
             SELECT id
@@ -160,36 +141,14 @@ router.patch("/:transactionId", async (req, res) => {
             });
         }
 
+        // Only resolve category if the client actually provided it
         let categoryId;
 
-        if (category === null) {
-            categoryId = null;
-
-        } else if (category !== undefined) {
-            const categoryResult = await pool.query(
-                `
-                SELECT id
-                FROM categories
-                WHERE user_id = $1
-                  AND LOWER(name) = LOWER($2);
-                `,
-                [userId, category]
+        if (category !== undefined) {
+            categoryId = await resolveCategoryId(
+                userId,
+                category
             );
-
-            if (categoryResult.rows.length > 0) {
-                categoryId = categoryResult.rows[0].id;
-            } else {
-                const newCategory = await pool.query(
-                    `
-                    INSERT INTO categories (user_id, name)
-                    VALUES ($1, $2)
-                    RETURNING id;
-                    `,
-                    [userId, category]
-                );
-
-                categoryId = newCategory.rows[0].id;
-            }
         }
 
         const updates = [];
@@ -212,9 +171,9 @@ router.patch("/:transactionId", async (req, res) => {
             values.push(categoryId);
         }
 
-        if (paymentMethod !== undefined) {
+        if (payment_method !== undefined) {
             updates.push(`payment_method = $${index++}`);
-            values.push(paymentMethod);
+            values.push(payment_method);
         }
 
         if (notes !== undefined) {
@@ -243,50 +202,15 @@ router.patch("/:transactionId", async (req, res) => {
             values
         );
 
-        res.json(result.rows[0]);
+        return res.json(result.rows[0]);
 
     } catch (error) {
         console.error(error);
 
-        res.status(500).json({
+        return res.status(500).json({
             error: "Failed to update transaction"
         });
     }
 });
-
-router.delete("/:transactionId", async (req, res) => {
-    try {
-        const { transactionId } = req.params;
-        const userId = req.user.userId;
-
-        const result = await pool.query(
-            `
-            DELETE FROM transactions
-            WHERE id = $1
-              AND user_id = $2
-            RETURNING *;
-            `,
-            [transactionId, userId]
-        );
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({
-                error: "Transaction not found"
-            });
-        }
-
-        res.json({
-            message: "Transaction deleted successfully",
-            transaction : result.rows[0]
-        });
-
-    } catch (error) {
-        console.error(error);
-
-        res.status(500).json({
-            error: "Failed to delete transaction"
-        });
-    }
-}); 
 
 module.exports = router; // make the router avaialble to server.js
