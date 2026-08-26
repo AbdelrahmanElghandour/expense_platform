@@ -8,16 +8,18 @@ router.get("/", async (req, res) => {
         const result = await pool.query(
             `
             SELECT
-                expenses.id,
-                expenses.amount,
+                transactions.id,
+                transactions.type,
+                transactions.amount,
                 categories.name AS category,
-                expenses.payment_method,
-                expenses.notes,
-                expenses.expense_date
-            FROM expenses
-            JOIN categories
-                ON expenses.category_id = categories.id
-            WHERE expenses.user_id = $1;
+                transactions.payment_method,
+                transactions.notes,
+                transactions.transaction_date
+            FROM transactions
+            LEFT JOIN categories
+                ON transactions.category_id = categories.id
+            WHERE transactions.user_id = $1
+            ORDER BY transactions.transaction_date DESC;
             `,
             [req.user.userId]
         );
@@ -26,7 +28,7 @@ router.get("/", async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({
-            error: "Failed to retrieve expenses"
+            error: "Failed to retrieve transaction"
         });
     }
 });
@@ -34,11 +36,12 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
     try {
         const {
+            type,
             amount,
             category,
             paymentMethod,
             notes,
-            expenseDate
+            transactionDate
         } = req.body;
 
         const categoryResult = await pool.query(
@@ -70,24 +73,26 @@ router.post("/", async (req, res) => {
 
         const result = await pool.query(
             `
-            INSERT INTO expenses (
+            INSERT INTO transactions (
                 user_id,
+                type,
                 category_id,
                 amount,
                 payment_method,
                 notes,
-                expense_date
+                transaction_date
             )
-            VALUES ($1, $2, $3, $4, $5, $6)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *;
             `,
             [
                 req.user.userId,
+                type,
                 categoryId,
                 amount,
                 paymentMethod,
                 notes,
-                expenseDate
+                transactionDate
             ]
         );
 
@@ -97,37 +102,38 @@ router.post("/", async (req, res) => {
         console.error(error);
 
         res.status(500).json({
-            error: "Failed to create expense"
+            error: "Failed to create transaction"
         });
     }
 });
 
-router.patch("/:expenseId", async (req, res) => {
+router.patch("/:transactionId", async (req, res) => {
     try {
-        const { expenseId } = req.params;
+        const { transactionId } = req.params;
         const userId = req.user.userId;
 
         const {
+            type,
             amount,
             category,
             paymentMethod,
             notes,
-            expenseDate
+            transactionDate
         } = req.body;
 
-        const expenseResult = await pool.query(
+        const transactionResult = await pool.query(
             `
             SELECT id
-            FROM expenses
+            FROM transactions
             WHERE id = $1
               AND user_id = $2;
             `,
-            [expenseId, userId]
+            [transactionId, userId]
         );
 
-        if (expenseResult.rows.length === 0) {
+        if (transactionResult.rows.length === 0) {
             return res.status(404).json({
-                error: "Expense not found"
+                error: "Transaction not found"
             });
         }
 
@@ -167,6 +173,10 @@ router.patch("/:expenseId", async (req, res) => {
         const values = [];
 
         let index = 1;
+        if (type !== undefined) {
+            updates.push(`type = $${index++}`);
+            values.push(type);
+        }
 
         if (amount !== undefined) {
             updates.push(`amount = $${index++}`);
@@ -188,9 +198,9 @@ router.patch("/:expenseId", async (req, res) => {
             values.push(notes);
         }
 
-        if (expenseDate !== undefined) {
-            updates.push(`expense_date = $${index++}`);
-            values.push(expenseDate);
+        if (transactionDate  !== undefined) {
+            updates.push(`transaction_date = $${index++}`);
+            values.push(transactionDate );
         }
 
         if (updates.length === 0) {
@@ -201,12 +211,12 @@ router.patch("/:expenseId", async (req, res) => {
 
         updates.push("updated_at = CURRENT_TIMESTAMP");
 
-        values.push(expenseId);
+        values.push(transactionIdId);
         values.push(userId);
 
         const result = await pool.query(
             `
-            UPDATE expenses
+            UPDATE transactions
             SET ${updates.join(", ")}
             WHERE id = $${index}
               AND user_id = $${index + 1}
@@ -221,43 +231,43 @@ router.patch("/:expenseId", async (req, res) => {
         console.error(error);
 
         res.status(500).json({
-            error: "Failed to update expense"
+            error: "Failed to update transaction"
         });
     }
 });
 
 
-router.delete("/:expenseId", async (req, res) => {
+router.delete("/:transactionId", async (req, res) => {
     try {
-        const { expenseId } = req.params;
+        const { transactionId } = req.params;
         const userId = req.user.userId;
 
         const result = await pool.query(
             `
-            DELETE FROM expenses
+            DELETE FROM transactions
             WHERE id = $1
               AND user_id = $2
             RETURNING *;
             `,
-            [expenseId, userId]
+            [transactionId, userId]
         );
 
         if (result.rows.length === 0) {
             return res.status(404).json({
-                error: "Expense not found"
+                error: "Transaction not found"
             });
         }
 
         res.json({
-            message: "Expense deleted successfully",
-            expense: result.rows[0]
+            message: "Transaction deleted successfully",
+            transaction : result.rows[0]
         });
 
     } catch (error) {
         console.error(error);
 
         res.status(500).json({
-            error: "Failed to delete expense"
+            error: "Failed to delete transaction"
         });
     }
 }); 

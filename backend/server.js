@@ -1,7 +1,10 @@
 const express = require("express");
-const expenseRouter = require("./src/routes/expenses"); 
+
+
+const transactionRouter = require("./src/routes/transactions");
 
 const authRouter = require("./src/routes/auth"); 
+
 const authenticateToken = require("./src/middleware/auth");
 
 const app = express();
@@ -12,7 +15,7 @@ app.get("/", (req, res) => {
     res.send("Hello from Express Platform!");
 });
 
-app.use("/expenses", authenticateToken, expenseRouter);
+app.use("/transactions", authenticateToken, transactionRouter);
 
 app.use("/auth", authRouter);
 
