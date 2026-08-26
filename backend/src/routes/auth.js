@@ -3,15 +3,30 @@ const bcrypt = require("bcrypt");
 const pool = require("../db");
 const jwt = require("jsonwebtoken");
 
+const {
+    validateRegistration,
+    validateLogin,
+    normalizeRegistrationData,
+    normalizeEmail
+} = require("../validation/authValidation");
+
 const router = express.Router();
 
 router.post("/register", async (req, res) => {
     try {
+        const validationError = validateRegistration(req.body);
+
+        if (validationError) {
+            return res.status(400).json({
+                error: validationError
+            });
+        }
+
         const {
             email,
             password,
             currency
-        } = req.body;
+        } = normalizeRegistrationData(req.body);
 
         if (!email || !password || !currency) {
             return res.status(400).json({
@@ -55,25 +70,34 @@ router.post("/register", async (req, res) => {
     } catch (error) {
         console.error(error);
 
-        res.status(500).json({
+        if (error.code === "23505") {
+            return res.status(409).json({
+                error: "An account with this email already exists"
+            });
+        }
+
+        return res.status(500).json({
             error: "Registration failed"
-        });
-    }
+    });
+}
 });
 
 router.post("/login", async (req, res) => {
     try {
-        const {
-            email,
-            password
-        } = req.body;
+        // Validate the incoming login data
+        const validationError = validateLogin(req.body);
 
-        if (!email || !password) {
+        if (validationError) {
             return res.status(400).json({
-                error: "Email and password are required"
+                error: validationError
             });
         }
 
+        // Normalize email so login is case-insensitive
+        const email = normalizeEmail(req.body.email);
+        const password = req.body.password;
+
+        // Find the user
         const result = await pool.query(
             `
             SELECT id, email, password_hash, default_currency
@@ -83,6 +107,7 @@ router.post("/login", async (req, res) => {
             [email]
         );
 
+        // Don't reveal whether the email exists
         if (result.rows.length === 0) {
             return res.status(401).json({
                 error: "Invalid email or password"
@@ -91,6 +116,7 @@ router.post("/login", async (req, res) => {
 
         const user = result.rows[0];
 
+        // Compare submitted password with stored hash
         const passwordMatches = await bcrypt.compare(
             password,
             user.password_hash
@@ -102,17 +128,18 @@ router.post("/login", async (req, res) => {
             });
         }
 
+        // Generate JWT
         const token = jwt.sign(
             {
-                userId: user.id // The information we are putting inside the token.
+                userId: user.id
             },
-            process.env.JWT_SECRET, // The secret used to sign it
+            process.env.JWT_SECRET,
             {
-                expiresIn: "1h" // the token expires after 1 hour
+                expiresIn: "1h"
             }
         );
 
-        res.json({
+        return res.json({
             message: "Login successful",
             token,
             user: {
@@ -125,7 +152,7 @@ router.post("/login", async (req, res) => {
     } catch (error) {
         console.error(error);
 
-        res.status(500).json({
+        return res.status(500).json({
             error: "Login failed"
         });
     }
