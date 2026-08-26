@@ -1,6 +1,13 @@
 const express = require("express");
 const pool = require("../db");
 
+const {
+    validateCreateTransaction,
+    normalizeTransactionData,
+    validatePatchTransaction
+} = require("../validation/transactionValidation");
+
+
 const router = express.Router();
 
 router.get("/", async (req, res) => {
@@ -35,15 +42,23 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
     try {
+        const validationError = validateCreateTransaction(req.body);
+
+        if (validationError) {
+            return res.status(400).json({
+                error: validationError
+            });
+        }
+
         const {
             type,
             amount,
             category,
-            paymentMethod,
+            payment_method,
             notes,
             transactionDate
-        } = req.body;
-
+        } = normalizeTransactionData(req.body);
+        
         const categoryResult = await pool.query(
             `
             SELECT id
@@ -90,7 +105,7 @@ router.post("/", async (req, res) => {
                 type,
                 categoryId,
                 amount,
-                paymentMethod,
+                payment_method,
                 notes,
                 transactionDate
             ]
@@ -112,6 +127,14 @@ router.patch("/:transactionId", async (req, res) => {
         const { transactionId } = req.params;
         const userId = req.user.userId;
 
+        const validationError = validatePatchTransaction(req.body);
+
+        if (validationError) {
+            return res.status(400).json({
+                error: validationError
+            });
+        }
+
         const {
             type,
             amount,
@@ -119,7 +142,7 @@ router.patch("/:transactionId", async (req, res) => {
             paymentMethod,
             notes,
             transactionDate
-        } = req.body;
+        } = normalizeTransactionData(req.body);
 
         const transactionResult = await pool.query(
             `
@@ -173,6 +196,7 @@ router.patch("/:transactionId", async (req, res) => {
         const values = [];
 
         let index = 1;
+
         if (type !== undefined) {
             updates.push(`type = $${index++}`);
             values.push(type);
@@ -198,20 +222,14 @@ router.patch("/:transactionId", async (req, res) => {
             values.push(notes);
         }
 
-        if (transactionDate  !== undefined) {
+        if (transactionDate !== undefined) {
             updates.push(`transaction_date = $${index++}`);
-            values.push(transactionDate );
-        }
-
-        if (updates.length === 0) {
-            return res.status(400).json({
-                error: "No fields provided to update"
-            });
+            values.push(transactionDate);
         }
 
         updates.push("updated_at = CURRENT_TIMESTAMP");
 
-        values.push(transactionIdId);
+        values.push(transactionId);
         values.push(userId);
 
         const result = await pool.query(
@@ -235,7 +253,6 @@ router.patch("/:transactionId", async (req, res) => {
         });
     }
 });
-
 
 router.delete("/:transactionId", async (req, res) => {
     try {

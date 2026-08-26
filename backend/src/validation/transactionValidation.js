@@ -1,0 +1,189 @@
+const allowedPaymentMethods = [
+    "Cash",
+    "Credit Card",
+    "Debit Card",
+    "Bank Transfer",
+    "Other"
+];
+
+function isValidDateString(value) {
+    if (typeof value !== "string") {
+        return false;
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return false;
+    }
+
+    const [year, month, day] = value.split("-").map(Number);
+
+    const date = new Date(Date.UTC(year, month - 1, day));
+
+    return (
+        date.getUTCFullYear() === year &&
+        date.getUTCMonth() === month - 1 &&
+        date.getUTCDate() === day
+    );
+}
+
+function validateType(type) {
+    if (type !== "expense" && type !== "income") {
+        return "Type must be either 'expense' or 'income'";
+    }
+
+    return null;
+}
+
+function validateAmount(amount) {
+    if (
+        typeof amount !== "number" ||
+        !Number.isFinite(amount) ||
+        amount <= 0
+    ) {
+        return "Amount must be a number greater than 0";
+    }
+
+    return null;
+}
+
+function validateCategory(category) {
+    if (category === undefined || category === null) {
+        return null;
+    }
+
+    if (typeof category !== "string") {
+        return "Category must be a string or null";
+    }
+
+    const normalizedCategory = category.trim();
+
+    if (normalizedCategory.length === 0) {
+        return "Category cannot be empty";
+    }
+
+    if (normalizedCategory.length > 100) {
+        return "Category must be 100 characters or fewer";
+    }
+
+    return null;
+}
+
+function validatePaymentMethod(paymentMethod) {
+    if (paymentMethod === undefined || paymentMethod === null) {
+        return null;
+    }
+
+    if (typeof paymentMethod !== "string") {
+        return "Payment method must be a string or null";
+    }
+
+    const normalizedPaymentMethod = paymentMethod.trim();
+
+    if (!allowedPaymentMethods.includes(normalizedPaymentMethod)) {
+        return "Invalid payment method";
+    }
+
+    return null;
+}
+
+function validateNotes(notes) {
+    if (notes === undefined || notes === null) {
+        return null;
+    }
+
+    if (typeof notes !== "string") {
+        return "Notes must be a string or null";
+    }
+
+    if (notes.trim().length > 1000) {
+        return "Notes must be 1000 characters or fewer";
+    }
+
+    return null;
+}
+
+function validateTransactionDate(transactionDate) {
+    if (!isValidDateString(transactionDate)) {
+        return "Transaction date must be a valid date in YYYY-MM-DD format";
+    }
+
+    return null;
+}
+
+function normalizeTransactionData(data) {
+    return {
+        ...data,
+
+        category:
+            typeof data.category === "string"
+                ? data.category.trim()
+                : data.category,
+
+        paymentMethod:
+            typeof data.paymentMethod === "string"
+                ? data.paymentMethod.trim()
+                : data.paymentMethod,
+
+        notes:
+            typeof data.notes === "string"
+                ? data.notes.trim()
+                : data.notes
+    };
+}
+
+function validateCreateTransaction(data) {
+    const errors = [
+        validateType(data.type),
+        validateAmount(data.amount),
+        validateCategory(data.category),
+        validatePaymentMethod(data.paymentMethod),
+        validateNotes(data.notes),
+        validateTransactionDate(data.transactionDate)
+    ];
+
+    return errors.find(error => error !== null) || null;
+}
+
+function validatePatchTransaction(data) {
+    if (Object.keys(data).length === 0) {
+        return "No fields provided to update";
+    }
+
+    if (data.type !== undefined) {
+        const error = validateType(data.type);
+        if (error) return error;
+    }
+
+    if (data.amount !== undefined) {
+        const error = validateAmount(data.amount);
+        if (error) return error;
+    }
+
+    if (data.category !== undefined) {
+        const error = validateCategory(data.category);
+        if (error) return error;
+    }
+
+    if (data.paymentMethod !== undefined) {
+        const error = validatePaymentMethod(data.paymentMethod);
+        if (error) return error;
+    }
+
+    if (data.notes !== undefined) {
+        const error = validateNotes(data.notes);
+        if (error) return error;
+    }
+
+    if (data.transactionDate !== undefined) {
+        const error = validateTransactionDate(data.transactionDate);
+        if (error) return error;
+    }
+
+    return null;
+}
+
+module.exports = {
+    validateCreateTransaction,
+    validatePatchTransaction,
+    normalizeTransactionData
+};
