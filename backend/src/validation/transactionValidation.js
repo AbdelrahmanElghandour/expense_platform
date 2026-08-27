@@ -182,8 +182,21 @@ function validatePatchTransaction(data) {
     return null;
 }
 
+function validateTransactionId(transactionId) {
+    if (
+        typeof transactionId !== "string" ||
+        !/^\d+$/.test(transactionId) ||
+        Number(transactionId) <= 0
+    ) {
+        return "Transaction ID must be a positive integer";
+    }
+
+    return null;
+}
+
 module.exports = {
     validateCreateTransaction,
     validatePatchTransaction,
-    normalizeTransactionData
+    normalizeTransactionData,
+    validateTransactionId
 };

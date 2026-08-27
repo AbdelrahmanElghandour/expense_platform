@@ -4,7 +4,8 @@ const pool = require("../db");
 const {
     validateCreateTransaction,
     normalizeTransactionData,
-    validatePatchTransaction
+    validatePatchTransaction,
+    validateTransactionId
 } = require("../validation/transactionValidation");
 const { resolveCategoryId } =
     require("../services/categoryService");
@@ -105,6 +106,14 @@ router.post("/", async (req, res) => {
 router.patch("/:transactionId", async (req, res) => {
     try {
         const { transactionId } = req.params;
+
+        const transactionIdError = validateTransactionId(transactionId);
+
+        if (transactionIdError) {
+            return res.status(400).json({
+                error: transactionIdError
+            });
+        }
         const userId = req.user.userId;
 
         const validationError = validatePatchTransaction(req.body);
@@ -209,6 +218,49 @@ router.patch("/:transactionId", async (req, res) => {
 
         return res.status(500).json({
             error: "Failed to update transaction"
+        });
+    }
+});
+
+router.delete("/:transactionId", async (req, res) => {
+    try {
+        const { transactionId } = req.params;
+        const userId = req.user.userId;
+
+        const transactionIdError = validateTransactionId(transactionId);
+
+        if (transactionIdError) {
+            return res.status(400).json({
+                error: transactionIdError
+            });
+        }
+
+        const result = await pool.query(
+            `
+            DELETE FROM transactions
+            WHERE id = $1
+              AND user_id = $2
+            RETURNING *;
+            `,
+            [transactionId, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                error: "Transaction not found"
+            });
+        }
+
+        return res.json({
+            message: "Transaction deleted successfully",
+            transaction: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            error: "Failed to delete transaction"
         });
     }
 });
