@@ -9,23 +9,35 @@ function authenticateToken(req, res, next) {
         });
     }
 
-    const token = authHeader.split(" ")[1]; // extracts the token
+    const parts = authHeader.split(" ");
 
-    if (!token) {
+    if (
+        parts.length !== 2 ||
+        parts[0] !== "Bearer" ||
+        !parts[1]
+    ) {
         return res.status(401).json({
-            error: "Authentication required"
+            error: "Invalid authorization header"
         });
     }
+
+    const token = parts[1];
 
     try {
         const decoded = jwt.verify(
             token,
             process.env.JWT_SECRET
-        ); // check JWT's signature validity if someone modified the token, verification fails
+        );
 
-        req.user = decoded; // user id
+        if (!decoded.userId) {
+            return res.status(401).json({
+                error: "Invalid token"
+            });
+        }
 
-        next(); // Authentication succeeded continue to the next middleware/route
+        req.user = decoded;
+
+        return next();
 
     } catch (error) {
         return res.status(401).json({
