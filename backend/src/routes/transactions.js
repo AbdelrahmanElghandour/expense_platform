@@ -5,7 +5,8 @@ const {
     validateCreateTransaction,
     normalizeTransactionData,
     validatePatchTransaction,
-    validateTransactionId
+    validateTransactionId,
+    validateTransactionFilters
 } = require("../validation/transactionValidation");
 const { resolveCategoryId } =
     require("../services/categoryService");
@@ -15,6 +16,105 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
     try {
+        const filterError = validateTransactionFilters(req.query);
+
+        if (filterError) {
+            return res.status(400).json({
+                error: filterError
+            });
+        }
+
+        const rawPage = req.query.page;
+        const rawLimit = req.query.limit;
+
+        const page = rawPage === undefined ? 1 : Number(rawPage);
+        const limit = rawLimit === undefined ? 20 : Number(rawLimit);
+
+        if (!Number.isInteger(page) || page < 1) {
+            return res.status(400).json({
+                error: "Page must be a positive integer"
+            });
+        }
+
+        if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+            return res.status(400).json({
+                error: "Limit must be an integer between 1 and 100"
+            });
+        }
+
+        const {
+            type,
+            category,
+            startDate,
+            endDate
+        } = req.query;
+
+        const conditions = [
+            "transactions.user_id = $1"
+        ];
+
+        const values = [
+            req.user.userId
+        ];
+
+        if (type !== undefined) {
+            values.push(type);
+
+            conditions.push(
+                `transactions.type = $${values.length}`
+            );
+        }
+
+        if (category !== undefined) {
+            values.push(category);
+
+            conditions.push(
+                `LOWER(categories.name) = LOWER($${values.length})`
+            );
+        }
+
+        if (startDate !== undefined) {
+            values.push(startDate);
+
+            conditions.push(
+                `transactions.transaction_date >= $${values.length}`
+            );
+        }
+
+        if (endDate !== undefined) {
+            values.push(endDate);
+
+            conditions.push(
+                `transactions.transaction_date <= $${values.length}`
+            );
+        }
+
+        const whereClause = conditions.join(" AND ");
+
+        const countResult = await pool.query(
+            `
+            SELECT COUNT(*) AS total
+            FROM transactions
+            LEFT JOIN categories
+                ON transactions.category_id = categories.id
+            WHERE ${whereClause};
+            `,
+            values
+        );
+
+        const totalTransactions = Number(countResult.rows[0].total);
+        const totalPages = Math.ceil(totalTransactions / limit);
+
+        const offset = (page - 1) * limit;
+
+        const queryValues = [...values];
+
+        queryValues.push(limit);
+        const limitIndex = queryValues.length;
+
+        queryValues.push(offset);
+        const offsetIndex = queryValues.length;
+
         const result = await pool.query(
             `
             SELECT
@@ -28,20 +128,31 @@ router.get("/", async (req, res) => {
             FROM transactions
             LEFT JOIN categories
                 ON transactions.category_id = categories.id
-            WHERE transactions.user_id = $1
-            ORDER BY transactions.transaction_date DESC;
+            WHERE ${whereClause}
+            ORDER BY transactions.transaction_date DESC
+            LIMIT $${limitIndex}
+            OFFSET $${offsetIndex};
             `,
-            [req.user.userId]
+            queryValues
         );
 
-        res.json(result.rows);
+        return res.json({
+            page,
+            limit,
+            totalTransactions,
+            totalPages,
+            transactions: result.rows
+        });
+
     } catch (error) {
         console.error(error);
-        res.status(500).json({
-            error: "Failed to retrieve transaction"
+
+        return res.status(500).json({
+            error: "Failed to retrieve transactions"
         });
     }
 });
+
 
 router.post("/", async (req, res) => {
     try {

@@ -194,9 +194,57 @@ function validateTransactionId(transactionId) {
     return null;
 }
 
+function validateTransactionFilters(filters) {
+    const {
+        type,
+        category,
+        startDate,
+        endDate
+    } = filters;
+
+    if (type !== undefined) {
+        const typeError = validateType(type);
+
+        if (typeError) {
+            return typeError;
+        }
+    }
+
+    if (category !== undefined) {
+        const categoryError = validateCategory(category);
+
+        if (categoryError) {
+            return categoryError;
+        }
+    }
+
+    if (startDate !== undefined) {
+        if (!isValidDateString(startDate)) {
+            return "Start date must be a valid date in YYYY-MM-DD format";
+        }
+    }
+
+    if (endDate !== undefined) {
+        if (!isValidDateString(endDate)) {
+            return "End date must be a valid date in YYYY-MM-DD format";
+        }
+    }
+
+    if (
+        startDate !== undefined &&
+        endDate !== undefined &&
+        startDate > endDate
+    ) {
+        return "Start date cannot be after end date";
+    }
+
+    return null;
+}
+
 module.exports = {
     validateCreateTransaction,
     validatePatchTransaction,
     normalizeTransactionData,
-    validateTransactionId
+    validateTransactionId,
+    validateTransactionFilters
 };
