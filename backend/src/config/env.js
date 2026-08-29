@@ -1,11 +1,16 @@
 const dotenv = require("dotenv");
+const path = require("path");
 
 if (process.env.NODE_ENV === "test") {
     dotenv.config({
-        path: ".env.test"
+        path: path.resolve(__dirname, "../../.env.test"),
+        quiet: true
     });
 } else {
-    dotenv.config();
+    dotenv.config({
+        path: path.resolve(__dirname, "../../.env"),
+        quiet: true
+    });
 }
 
 const requiredEnvVariables = [
@@ -15,7 +20,8 @@ const requiredEnvVariables = [
     "DB_PASSWORD",
     "DB_PORT",
     "JWT_SECRET",
-    "PORT"
+    "PORT",
+    "FRONTEND_URL"
 ];
 
 for (const variable of requiredEnvVariables) {

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test jest --runInBand --setupFilesAfterEnv ./tests/setup.js"
+    "test": "cross-env NODE_ENV=test jest --runInBand --verbose --setupFilesAfterEnv ./tests/setup.js"
   },
   "keywords": [],
   "author": "",

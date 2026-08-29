@@ -246,5 +246,6 @@ module.exports = {
     validatePatchTransaction,
     normalizeTransactionData,
     validateTransactionId,
-    validateTransactionFilters
+    validateTransactionFilters,
+    isValidDateString
 };

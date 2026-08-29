@@ -2,6 +2,7 @@ require("./config/env");
 
 const express = require("express");
 const helmet = require("helmet");
+const analyticsRouter = require("./routes/analytics");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 
@@ -41,6 +42,12 @@ if (process.env.NODE_ENV !== "test") {
 app.use("/auth", authRouter);
 
 app.use("/transactions", authenticateToken, transactionRouter);
+
+app.use(
+    "/analytics",
+    authenticateToken,
+    analyticsRouter
+);
 
 app.use(notFoundHandler);
 
