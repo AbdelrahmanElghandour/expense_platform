@@ -208,3 +208,200 @@ describe("GET /analytics/categories", () => {
         expect(response.body.categories[0].category).toBe("Food");
     });
 });
+
+describe("GET /analytics/trends", () => {
+    test("groups transactions by day", async () => {
+        await createTransaction({
+            type: "income",
+            amount: 100000,
+            transactionDate: "2026-08-20"
+        });
+
+        await createTransaction({
+            type: "expense",
+            amount: 20000,
+            transactionDate: "2026-08-20"
+        });
+
+        await createTransaction({
+            type: "expense",
+            amount: 30000,
+            transactionDate: "2026-08-21"
+        });
+
+        const response = await request(app)
+            .get("/analytics/trends?groupBy=day")
+            .set("Authorization", `Bearer ${token}`);
+
+        expect(response.statusCode).toBe(200);
+
+        expect(response.body.groupBy).toBe("day");
+
+        expect(response.body.trends).toEqual([
+            {
+                period: "2026-08-20",
+                income: "100000.00",
+                expenses: "20000.00"
+            },
+            {
+                period: "2026-08-21",
+                income: "0",
+                expenses: "30000.00"
+            }
+        ]);
+    });
+
+    test("groups transactions by month", async () => {
+        await createTransaction({
+            type: "income",
+            amount: 500000,
+            transactionDate: "2026-07-10"
+        });
+
+        await createTransaction({
+            type: "expense",
+            amount: 100000,
+            transactionDate: "2026-07-20"
+        });
+
+        await createTransaction({
+            type: "income",
+            amount: 700000,
+            transactionDate: "2026-08-05"
+        });
+
+        await createTransaction({
+            type: "expense",
+            amount: 200000,
+            transactionDate: "2026-08-25"
+        });
+
+        const response = await request(app)
+            .get("/analytics/trends?groupBy=month")
+            .set("Authorization", `Bearer ${token}`);
+
+        expect(response.statusCode).toBe(200);
+
+        expect(response.body.trends).toEqual([
+            {
+                period: "2026-07",
+                income: "500000.00",
+                expenses: "100000.00"
+            },
+            {
+                period: "2026-08",
+                income: "700000.00",
+                expenses: "200000.00"
+            }
+        ]);
+    });
+
+    test("groups transactions by year", async () => {
+        await createTransaction({
+            type: "income",
+            amount: 1000000,
+            transactionDate: "2025-06-10"
+        });
+
+        await createTransaction({
+            type: "expense",
+            amount: 250000,
+            transactionDate: "2025-11-20"
+        });
+
+        await createTransaction({
+            type: "income",
+            amount: 2000000,
+            transactionDate: "2026-03-15"
+        });
+
+        await createTransaction({
+            type: "expense",
+            amount: 500000,
+            transactionDate: "2026-08-20"
+        });
+
+        const response = await request(app)
+            .get("/analytics/trends?groupBy=year")
+            .set("Authorization", `Bearer ${token}`);
+
+        expect(response.statusCode).toBe(200);
+
+        expect(response.body.trends).toEqual([
+            {
+                period: "2025",
+                income: "1000000.00",
+                expenses: "250000.00"
+            },
+            {
+                period: "2026",
+                income: "2000000.00",
+                expenses: "500000.00"
+            }
+        ]);
+    });
+
+    test("filters trends by date range", async () => {
+        await createTransaction({
+            type: "income",
+            amount: 100000,
+            transactionDate: "2026-07-10"
+        });
+
+        await createTransaction({
+            type: "income",
+            amount: 200000,
+            transactionDate: "2026-08-10"
+        });
+
+        await createTransaction({
+            type: "expense",
+            amount: 50000,
+            transactionDate: "2026-08-20"
+        });
+
+        const response = await request(app)
+            .get(
+                "/analytics/trends?groupBy=month&startDate=2026-08-01&endDate=2026-08-31"
+            )
+            .set("Authorization", `Bearer ${token}`);
+
+        expect(response.statusCode).toBe(200);
+
+        expect(response.body.trends).toEqual([
+            {
+                period: "2026-08",
+                income: "200000.00",
+                expenses: "50000.00"
+            }
+        ]);
+    });
+
+    test("does not shift a month because of timezone conversion", async () => {
+        await createTransaction({
+            type: "expense",
+            amount: 10000,
+            transactionDate: "2026-08-01"
+        });
+
+        const response = await request(app)
+            .get("/analytics/trends?groupBy=month")
+            .set("Authorization", `Bearer ${token}`);
+
+        expect(response.statusCode).toBe(200);
+
+        expect(response.body.trends[0].period).toBe("2026-08");
+    });
+
+    test("rejects an invalid groupBy value", async () => {
+        const response = await request(app)
+            .get("/analytics/trends?groupBy=week")
+            .set("Authorization", `Bearer ${token}`);
+
+        expect(response.statusCode).toBe(400);
+
+        expect(response.body.error).toBe(
+            "groupBy must be 'day', 'month', or 'year'"
+        );
+    });
+});
