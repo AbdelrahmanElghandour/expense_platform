@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import api from "../api/api";
 import CreateTransactionForm from "../components/CreateTransactionForm";
+import EditTransactionForm from "../components/EditTransactionForm";
 
 function TransactionsPage() {
     const [transactions, setTransactions] = useState([]);
     const [error, setError] = useState("");
     const [editingTransaction, setEditingTransaction] = useState(null);
+
     async function fetchTransactions() {
         try {
             const response = await api.get("/transactions");
@@ -44,29 +46,54 @@ function TransactionsPage() {
                 <p>No transactions found.</p>
             ) : (
                 <div>
-                    {transactions.map((transaction) => ( // map() takes each transaction object and produces some jsx for it.
+                    {transactions.map((transaction) => (
                         <div key={transaction.id}>
-                            <p>Type: {transaction.type}</p>
-                            <p>Amount: {transaction.amount}</p>
-                            <p>
-                                Category:{" "}
-                                {transaction.category || "Uncategorized"}
-                            </p>
-                            <p>
-                                Date: {transaction.transaction_date}
-                            </p>
+                            {editingTransaction?.id === transaction.id ? (
+                                <EditTransactionForm
+                                    transaction={transaction}
+                                    onTransactionUpdated={async () => {
+                                        await fetchTransactions();
+                                        setEditingTransaction(null);
+                                    }}
+                                    onCancel={() => {
+                                        setEditingTransaction(null);
+                                    }}
+                                />
+                            ) : (
+                                <>
+                                    <p>Type: {transaction.type}</p>
+                                    <p>Amount: {transaction.amount}</p>
 
-                            {transaction.notes && (
-                                <p>Note: {transaction.notes}</p>
+                                    <p>
+                                        Category:{" "}
+                                        {transaction.category || "Uncategorized"}
+                                    </p>
+
+                                    <p>
+                                        Date: {transaction.transaction_date}
+                                    </p>
+
+                                    {transaction.notes && (
+                                        <p>Note: {transaction.notes}</p>
+                                    )}
+
+                                    <button
+                                        onClick={() =>
+                                            setEditingTransaction(transaction)
+                                        }
+                                    >
+                                        Edit
+                                    </button>
+
+                                    <button
+                                        onClick={() =>
+                                            handleDelete(transaction.id)
+                                        }
+                                    >
+                                        Delete
+                                    </button>
+                                </>
                             )}
-                            <button
-                                onClick={() => handleDelete(transaction.id)}
-                                // onClick={handleDelete(transaction.id)}
-                                // is not good because it would call handle delete immediately while React
-                                // is rendering the page
-                            >
-                                Delete
-                            </button>
 
                             <hr />
                         </div>
