@@ -35,9 +35,9 @@ const authLimiter = rateLimit({
     }
 });
 
-if (process.env.NODE_ENV !== "test") {
-    app.use("/auth", authLimiter);
-}
+// if (process.env.NODE_ENV !== "test") {
+//     app.use("/auth", authLimiter);
+// }
 
 app.use("/auth", authRouter);
 

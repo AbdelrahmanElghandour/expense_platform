@@ -124,7 +124,7 @@ router.get("/", async (req, res) => {
                 categories.name AS category,
                 transactions.payment_method,
                 transactions.notes,
-                transactions.transaction_date
+                TO_CHAR(transactions.transaction_date, 'YYYY-MM-DD') AS transaction_date
             FROM transactions
             LEFT JOIN categories
                 ON transactions.category_id = categories.id
