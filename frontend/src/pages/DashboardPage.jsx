@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import api from "../api/api";
-import { useAuth } from "../context/AuthContext";
+import AppLayout from "../components/layout/AppLayout";
+import SummaryCard from "../components/dashboard/SummaryCard";
+import "../styles/dashboard.css";
 
 function DashboardPage() {
-    const { logout } = useAuth();
-    const navigate = useNavigate();
-
     const [summary, setSummary] = useState(null);
     const [categoryAnalytics, setCategoryAnalytics] = useState(null);
     const [trends, setTrends] = useState([]);
@@ -55,101 +53,141 @@ function DashboardPage() {
         fetchDashboardData();
     }, []);
 
-    function handleLogout() {
-        logout();
-        navigate("/login");
-    }
-
     return (
-        <div>
-            <h1>Dashboard</h1>
+        <AppLayout>
+            <div>
+                <header className="dashboard-header">
+                    <h1>Dashboard</h1>
+                    <p>Overview of your finances</p>
+                </header>
 
-            {error && <p>{error}</p>}
+                {error && <p>{error}</p>}
 
-            {/* Summary */}
-            {summary && (
-                <div>
-                    <h2>Summary</h2>
+                {/* Summary */}
+                {summary && (
+                    <section>
+                        <h2>Overview</h2>
 
-                    <p>
-                        Total Income: {summary.totalIncome}
-                    </p>
+                        <div className="summary-grid">
+                            <SummaryCard
+                                title="Total Income"
+                                value={summary.totalIncome}
+                            />
 
-                    <p>
-                        Total Expenses: {summary.totalExpenses}
-                    </p>
+                            <SummaryCard
+                                title="Total Expenses"
+                                value={summary.totalExpenses}
+                            />
 
-                    <p>
-                        Balance: {summary.balance}
-                    </p>
-                </div>
-            )}
-
-            <hr />
-
-            {/* Monthly Trends */}
-            <h2>Monthly Trends</h2>
-
-            {trends.length === 0 ? (
-                <p>No trend data found.</p>
-            ) : (
-                <div>
-                    {trends.map((trend) => (
-                        <div key={trend.period}>
-                            <p>
-                                Period: {trend.period}
-                            </p>
-
-                            <p>
-                                Income: {trend.income}
-                            </p>
-
-                            <p>
-                                Expenses: {trend.expenses}
-                            </p>
-
-                            <hr />
+                            <SummaryCard
+                                title="Balance"
+                                value={summary.balance}
+                            />
                         </div>
-                    ))}
-                </div>
-            )}
+                    </section>
+                )}
 
-            {/* Expenses by Category */}
-            <h2>Expenses by Category</h2>
+                <hr />
 
-            {categoryAnalytics && (
-                <div>
-                    <p>
-                        Total Expenses:{" "}
-                        {categoryAnalytics.totalExpenses}
-                    </p>
+                <div className="analytics-grid">
 
-                    {categoryAnalytics.categories.length === 0 ? (
-                        <p>No expense data found.</p>
-                    ) : (
-                        <div>
-                            {categoryAnalytics.categories.map(
-                                (category) => (
-                                    <div key={category.category}>
-                                        <p>
-                                            {category.category}:{" "}
-                                            {category.total} (
-                                            {category.percentage}%)
-                                        </p>
+                    {/* Monthly Trends */}
+                    <section className="dashboard-panel">
+                        <div className="panel-header">
+                            <div>
+                                <h2>Monthly Trends</h2>
+                                <p>Income and expenses over time</p>
+                            </div>
+                        </div>
+
+                        {trends.length === 0 ? (
+                            <p className="empty-state">
+                                No trend data found.
+                            </p>
+                        ) : (
+                            <div className="trends-list">
+                                {trends.map((trend) => (
+                                    <div
+                                        className="trend-row"
+                                        key={trend.period}
+                                    >
+                                        <span className="trend-period">
+                                            {trend.period}
+                                        </span>
+
+                                        <div className="trend-values">
+                                            <div>
+                                                <span className="trend-label">
+                                                    Income
+                                                </span>
+
+                                                <strong>
+                                                    {trend.income}
+                                                </strong>
+                                            </div>
+
+                                            <div>
+                                                <span className="trend-label">
+                                                    Expenses
+                                                </span>
+
+                                                <strong>
+                                                    {trend.expenses}
+                                                </strong>
+                                            </div>
+                                        </div>
                                     </div>
-                                )
-                            )}
+                                ))}
+                            </div>
+                        )}
+                    </section>
+
+                    {/* Expenses by Category */}
+                    <section className="dashboard-panel">
+                        <div className="panel-header">
+                            <div>
+                                <h2>Expenses by Category</h2>
+                                <p>Where your money is going</p>
+                            </div>
                         </div>
-                    )}
+
+                        {categoryAnalytics &&
+                            (categoryAnalytics.categories.length === 0 ? (
+                                <p className="empty-state">
+                                    No expense data found.
+                                </p>
+                            ) : (
+                                <div className="category-list">
+                                    {categoryAnalytics.categories.map(
+                                        (category) => (
+                                            <div
+                                                className="category-row"
+                                                key={category.category}
+                                            >
+                                                <div className="category-info">
+                                                    <span className="category-name">
+                                                        {category.category}
+                                                    </span>
+
+                                                    <span className="category-total">
+                                                        {category.total}
+                                                    </span>
+                                                </div>
+
+                                                <div className="category-percentage">
+                                                    {category.percentage}%
+                                                </div>
+                                            </div>
+                                        )
+                                    )}
+                                </div>
+                            ))}
+                    </section>
+
                 </div>
-            )}
-
-            <hr />
-
-            <button onClick={handleLogout}>
-                Logout
-            </button>
-        </div>
+                <hr />
+            </div>
+        </AppLayout>
     );
 }
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../api/api";
 import CreateTransactionForm from "../components/CreateTransactionForm";
 import EditTransactionForm from "../components/EditTransactionForm";
+import AppLayout from "../components/layout/AppLayout";
 
 
 function TransactionsPage() {
@@ -108,6 +109,7 @@ function TransactionsPage() {
         });
     }
     return (
+        <AppLayout>
         <div>
             <h1>Transactions</h1>
 
@@ -274,6 +276,7 @@ function TransactionsPage() {
                 </button>
             </div>
         </div>
+        </AppLayout>
     );
 }
 

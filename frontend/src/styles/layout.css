@@ -1,0 +1,96 @@
+.app-layout {
+    /* Puts sidebar and main content next to each other */
+    display: flex; 
+    min-height: 100vh;
+    background-color: #f6f7f9;
+}
+
+/* ---------- Sidebar ---------- */
+
+.sidebar {
+    width: 240px;
+    min-height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 24px 16px;
+
+    background-color: #111827;
+    color: white;
+}
+
+.sidebar-header {
+    padding: 0 12px;
+    margin-bottom: 32px;
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sidebar-link {
+    padding: 12px;
+
+    border-radius: 8px;
+
+    color: #9ca3af;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    transition:
+        background-color 0.2s,
+        color 0.2s;
+}
+
+.sidebar-link:hover {
+    background-color: #1f2937;
+    color: white;
+}
+
+.sidebar-link.active {
+    background-color: #374151;
+    color: white;
+}
+
+.sidebar-logout {
+    margin-top: auto;
+
+    padding: 12px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: transparent;
+    color: #9ca3af;
+
+    text-align: left;
+
+    transition:
+        background-color 0.2s,
+        color 0.2s;
+}
+
+.sidebar-logout:hover {
+    background-color: #1f2937;
+    color: white;
+}
+
+/* ---------- Main content ---------- */
+
+.main-content {
+    /* Sidebar gets its fixed 240px; main content takes all remaining horizontal space. */
+    flex: 1;
+    padding: 40px;
+
+    overflow-x: hidden;
+}
