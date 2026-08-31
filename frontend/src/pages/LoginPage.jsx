@@ -1,7 +1,7 @@
 import { useState } from "react";
 import api from "../api/api";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 function LoginPage() {
@@ -30,7 +30,7 @@ function LoginPage() {
             );
         }
     }
-    
+
     return (
         <div>
             <h1>Login</h1>
@@ -63,6 +63,12 @@ function LoginPage() {
                 </button>
                 <div></div>
             </form>
+            <p>
+                Don't have an account?{" "}
+                <Link to="/register">
+                    Create an account
+                </Link>
+            </p>
 
             {error && <p>{error}</p>}
         </div>
