@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import "../styles/auth.css";
 
 import api from "../api/api";
 
@@ -34,78 +35,107 @@ function RegisterPage() {
     }
 
     return (
-        <div>
-            <h1>Create Account</h1>
-
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Name</label>
-
-                    <input
-                        type="text"
-                        value={name}
-                        onChange={(event) =>
-                            setName(event.target.value)
-                        }
-                        required
-                    />
+        <div className="auth-page">
+            <div className="auth-card">
+                <div className="auth-header">
+                    <h1>Create your account</h1>
+                    <p>Start tracking your finances in one place</p>
                 </div>
 
-                <div>
-                    <label>Email</label>
+                <form
+                    className="auth-form"
+                    onSubmit={handleSubmit}
+                >
+                    <div className="auth-field">
+                        <label>Name</label>
 
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(event) =>
-                            setEmail(event.target.value)
-                        }
-                        required
-                    />
-                </div>
+                        <input
+                            type="text"
+                            placeholder="Your name"
+                            value={name}
+                            onChange={(event) =>
+                                setName(event.target.value)
+                            }
+                            required
+                        />
+                    </div>
 
-                <div>
-                    <label>Password</label>
+                    <div className="auth-field">
+                        <label>Email</label>
 
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(event) =>
-                            setPassword(event.target.value)
-                        }
-                        required
-                    />
-                </div>
+                        <input
+                            type="email"
+                            placeholder="you@example.com"
+                            value={email}
+                            onChange={(event) =>
+                                setEmail(event.target.value)
+                            }
+                            required
+                        />
+                    </div>
 
-                <div>
-                    <label>Currency</label>
+                    <div className="auth-field">
+                        <label>Password</label>
 
-                    <select
-                        value={currency}
-                        onChange={(event) =>
-                            setCurrency(event.target.value)
-                        }
+                        <input
+                            type="password"
+                            placeholder="Create a password"
+                            value={password}
+                            onChange={(event) =>
+                                setPassword(event.target.value)
+                            }
+                            required
+                        />
+                    </div>
+
+                    <div className="auth-field">
+                        <label>Default Currency</label>
+
+                        <select
+                            value={currency}
+                            onChange={(event) =>
+                                setCurrency(event.target.value)
+                            }
+                        >
+                            <option value="KRW">
+                                KRW — Korean Won
+                            </option>
+
+                            <option value="USD">
+                                USD — US Dollar
+                            </option>
+
+                            <option value="EUR">
+                                EUR — Euro
+                            </option>
+
+                            <option value="EGP">
+                                EGP — Egyptian Pound
+                            </option>
+                        </select>
+                    </div>
+
+                    {error && (
+                        <p className="auth-error">
+                            {error}
+                        </p>
+                    )}
+
+                    <button
+                        className="auth-submit-button"
+                        type="submit"
                     >
-                        <option value="KRW">KRW</option>
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="EGP">EGP</option>
-                    </select>
-                </div>
+                        Create Account
+                    </button>
+                </form>
 
-                {error && <p>{error}</p>}
-
-                <button type="submit">
-                    Create Account
-                </button>
-            </form>
-
-            <p>
-                Already have an account?{" "}
-                <Link to="/login">
-                    Login
-                </Link>
-            </p>
+                <p className="auth-footer">
+                    Already have an account?{" "}
+                    <Link to="/login">
+                        Sign in
+                    </Link>
+                </p>
+            </div>
         </div>
     );
 }

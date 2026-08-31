@@ -33,86 +33,105 @@ function CreateTransactionForm({ onTransactionCreated }) {
     }
 
     return (
-        <form onSubmit={handleSubmit}>
-            <div>
-                <label>Type</label>
+        <form
+            className="transaction-form"
+            onSubmit={handleSubmit}
+        >
+            <div className="transaction-form-grid">
+                <div className="form-field">
+                    <label>Type</label>
 
-                <select
-                    value={type}
-                    onChange={(event) =>
-                        setType(event.target.value)
-                    }
+                    <select
+                        value={type}
+                        onChange={(event) =>
+                            setType(event.target.value)
+                        }
+                    >
+                        <option value="expense">
+                            Expense
+                        </option>
+
+                        <option value="income">
+                            Income
+                        </option>
+                    </select>
+                </div>
+
+                <div className="form-field">
+                    <label>Amount</label>
+
+                    <input
+                        type="number"
+                        value={amount}
+                        onChange={(event) =>
+                            setAmount(event.target.value)
+                        }
+                    />
+                </div>
+
+                <div className="form-field">
+                    <label>Category</label>
+
+                    <input
+                        type="text"
+                        value={category}
+                        onChange={(event) =>
+                            setCategory(event.target.value)
+                        }
+                    />
+                </div>
+
+                <div className="form-field">
+                    <label>Payment Method</label>
+
+                    <input
+                        type="text"
+                        value={payment_method}
+                        onChange={(event) =>
+                            setPaymentMethod(event.target.value)
+                        }
+                    />
+                </div>
+
+                <div className="form-field">
+                    <label>Notes</label>
+
+                    <input
+                        type="text"
+                        value={notes}
+                        onChange={(event) =>
+                            setNotes(event.target.value)
+                        }
+                    />
+                </div>
+
+                <div className="form-field">
+                    <label>Date</label>
+
+                    <input
+                        type="date"
+                        value={transactionDate}
+                        onChange={(event) =>
+                            setTransactionDate(event.target.value)
+                        }
+                    />
+                </div>
+            </div>
+
+            {error && (
+                <p className="form-error">
+                    {error}
+                </p>
+            )}
+
+            <div className="transaction-form-actions">
+                <button
+                    className="primary-button"
+                    type="submit"
                 >
-                    <option value="expense">Expense</option>
-                    <option value="income">Income</option>
-                </select>
+                    Add Transaction
+                </button>
             </div>
-
-            <div>
-                <label>Amount</label>
-
-                <input
-                    type="number"
-                    value={amount}
-                    onChange={(event) =>
-                        setAmount(event.target.value)
-                    }
-                />
-            </div>
-
-            <div>
-                <label>Category</label>
-
-                <input
-                    type="text"
-                    value={category}
-                    onChange={(event) =>
-                        setCategory(event.target.value)
-                    }
-                />
-            </div>
-
-            <div>
-                <label>Payment Method</label>
-
-                <input
-                    type="text"
-                    value={payment_method}
-                    onChange={(event) =>
-                        setPaymentMethod(event.target.value)
-                    }
-                />
-            </div>
-
-            <div>
-                <label>Notes</label>
-
-                <input
-                    type="text"
-                    value={notes}
-                    onChange={(event) =>
-                        setNotes(event.target.value)
-                    }
-                />
-            </div>
-
-            <div>
-                <label>Date</label>
-
-                <input
-                    type="date"
-                    value={transactionDate}
-                    onChange={(event) =>
-                        setTransactionDate(event.target.value)
-                    }
-                />
-            </div>
-
-            {error && <p>{error}</p>}
-
-            <button type="submit">
-                Add Transaction
-            </button>
         </form>
     );
 }
