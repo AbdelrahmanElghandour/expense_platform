@@ -4,33 +4,111 @@ import api from "../api/api";
 import AppLayout from "../components/layout/AppLayout";
 import SummaryCard from "../components/dashboard/SummaryCard";
 import "../styles/dashboard.css";
+import MonthlyTrendChart from "../components/dashboard/MonthlyTrendChart";
+import CategoryDonutChart from "../components/dashboard/CategoryDonutChart";
 
 function DashboardPage() {
     const [summary, setSummary] = useState(null);
     const [categoryAnalytics, setCategoryAnalytics] = useState(null);
     const [trends, setTrends] = useState([]);
     const [error, setError] = useState("");
+    const [categoryPeriod, setCategoryPeriod] = useState("all");
+
+    function formatDate(date) {
+        const year = date.getFullYear();
+
+        const month = String(
+            date.getMonth() + 1
+        ).padStart(2, "0");
+
+        const day = String(
+            date.getDate()
+        ).padStart(2, "0");
+
+        return `${year}-${month}-${day}`;
+    }
+
+    function getCategoryDateRange(period) {
+        const now = new Date();
+
+        if (period === "all") {
+            return {};
+        }
+
+        if (period === "thisMonth") {
+            const startDate = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                1
+            );
+
+            const endDate = new Date(
+                now.getFullYear(),
+                now.getMonth() + 1,
+                0
+            );
+
+            return {
+                startDate: formatDate(startDate),
+                endDate: formatDate(endDate)
+            };
+        }
+
+        if (period === "lastMonth") {
+            const startDate = new Date(
+                now.getFullYear(),
+                now.getMonth() - 1,
+                1
+            );
+
+            const endDate = new Date(
+                now.getFullYear(),
+                now.getMonth(),
+                0
+            );
+
+            return {
+                startDate: formatDate(startDate),
+                endDate: formatDate(endDate)
+            };
+        }
+
+        if (period === "last3Months") {
+            const startDate = new Date(
+                now.getFullYear(),
+                now.getMonth() - 2,
+                1
+            );
+
+            return {
+                startDate: formatDate(startDate),
+                endDate: formatDate(now)
+            };
+        }
+
+        if (period === "thisYear") {
+            const startDate = new Date(
+                now.getFullYear(),
+                0,
+                1
+            );
+
+            return {
+                startDate: formatDate(startDate),
+                endDate: formatDate(now)
+            };
+        }
+
+        return {};
+    }
 
     useEffect(() => {
         async function fetchDashboardData() {
             try {
-                setError("");
-
-                // Summary
                 const summaryResponse = await api.get(
                     "/analytics/summary"
                 );
 
-                setSummary(summaryResponse.data);
-
-                // Expenses by category
-                const categoryResponse = await api.get(
-                    "/analytics/categories"
-                );
-
-                setCategoryAnalytics(categoryResponse.data);
-
-                // Monthly trends
                 const trendsResponse = await api.get(
                     "/analytics/trends",
                     {
@@ -40,18 +118,43 @@ function DashboardPage() {
                     }
                 );
 
-                setTrends(trendsResponse.data.trends);
+                setSummary(summaryResponse.data);
 
+                setTrends(
+                    trendsResponse.data.trends
+                );
             } catch (error) {
                 setError(
                     error.response?.data?.error ||
-                    "Failed to load dashboard data"
+                    "Failed to fetch dashboard data"
                 );
             }
         }
 
         fetchDashboardData();
     }, []);
+    useEffect(() => {
+        async function fetchCategoryAnalytics() {
+            try {
+                const params =
+                    getCategoryDateRange(categoryPeriod);
+
+                const response = await api.get(
+                    "/analytics/categories",
+                    { params }
+                );
+
+                setCategoryAnalytics(response.data);
+            } catch (error) {
+                setError(
+                    error.response?.data?.error ||
+                    "Failed to fetch category analytics"
+                );
+            }
+        }
+
+        fetchCategoryAnalytics();
+    }, [categoryPeriod]);
 
     return (
         <AppLayout>
@@ -105,50 +208,31 @@ function DashboardPage() {
                                 No trend data found.
                             </p>
                         ) : (
-                            <div className="trends-list">
-                                {trends.map((trend) => (
-                                    <div
-                                        className="trend-row"
-                                        key={trend.period}
-                                    >
-                                        <span className="trend-period">
-                                            {trend.period}
-                                        </span>
-
-                                        <div className="trend-values">
-                                            <div>
-                                                <span className="trend-label">
-                                                    Income
-                                                </span>
-
-                                                <strong>
-                                                    {trend.income}
-                                                </strong>
-                                            </div>
-
-                                            <div>
-                                                <span className="trend-label">
-                                                    Expenses
-                                                </span>
-
-                                                <strong>
-                                                    {trend.expenses}
-                                                </strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            <MonthlyTrendChart trends={trends} />
                         )}
                     </section>
 
                     {/* Expenses by Category */}
                     <section className="dashboard-panel">
-                        <div className="panel-header">
+                        <div className="panel-header panel-header-row">
                             <div>
                                 <h2>Expenses by Category</h2>
                                 <p>Where your money is going</p>
                             </div>
+
+                            <select
+                                className="period-select"
+                                value={categoryPeriod}
+                                onChange={(event) =>
+                                    setCategoryPeriod(event.target.value)
+                                }
+                            >
+                                <option value="all">All Time</option>
+                                <option value="thisMonth">This Month</option>
+                                <option value="lastMonth">Last Month</option>
+                                <option value="last3Months">Last 3 Months</option>
+                                <option value="thisYear">This Year</option>
+                            </select>
                         </div>
 
                         {categoryAnalytics &&
@@ -157,30 +241,10 @@ function DashboardPage() {
                                     No expense data found.
                                 </p>
                             ) : (
-                                <div className="category-list">
-                                    {categoryAnalytics.categories.map(
-                                        (category) => (
-                                            <div
-                                                className="category-row"
-                                                key={category.category}
-                                            >
-                                                <div className="category-info">
-                                                    <span className="category-name">
-                                                        {category.category}
-                                                    </span>
-
-                                                    <span className="category-total">
-                                                        {category.total}
-                                                    </span>
-                                                </div>
-
-                                                <div className="category-percentage">
-                                                    {category.percentage}%
-                                                </div>
-                                            </div>
-                                        )
-                                    )}
-                                </div>
+                                <CategoryDonutChart
+                                    categories={categoryAnalytics.categories}
+                                    totalExpenses={categoryAnalytics.totalExpenses}
+                                />
                             ))}
                     </section>
 
