@@ -96,7 +96,7 @@ function validateCurrency(currency) {
 function validateRegistration(data) {
     const nameError = validateName(data.name);
     if (nameError) return nameError;
-    
+
     const emailError = validateEmail(data.email);
     if (emailError) return emailError;
 
@@ -143,5 +143,6 @@ module.exports = {
     validateRegistration,
     normalizeRegistrationData,
     validateLogin,
-    normalizeEmail
+    normalizeEmail,
+    validatePassword
 };
