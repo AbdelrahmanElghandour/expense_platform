@@ -6,6 +6,24 @@ function normalizeEmail(email) {
     return email.trim().toLowerCase();
 }
 
+function validateName(name) {
+    if (typeof name !== "string") {
+        return "Name must be a string";
+    }
+
+    const normalizedName = name.trim();
+
+    if (normalizedName.length === 0) {
+        return "Name is required";
+    }
+
+    if (normalizedName.length > 100) {
+        return "Name must be 100 characters or fewer";
+    }
+
+    return null;
+}
+
 function validateEmail(email) {
     if (typeof email !== "string") {
         return "Email must be a string";
@@ -76,6 +94,9 @@ function validateCurrency(currency) {
 }
 
 function validateRegistration(data) {
+    const nameError = validateName(data.name);
+    if (nameError) return nameError;
+    
     const emailError = validateEmail(data.email);
     if (emailError) return emailError;
 
@@ -90,11 +111,13 @@ function validateRegistration(data) {
 
 function normalizeRegistrationData(data) {
     return {
-        ...data,
+        name: data.name.trim(),
         email: normalizeEmail(data.email),
-        currency: normalizeCurrency(data.currency)
+        password: data.password,
+        currency: data.currency
     };
 }
+
 
 function validateLogin(data) {
     if (typeof data.email !== "string") {

@@ -23,14 +23,15 @@ router.post("/register", async (req, res) => {
         }
 
         const {
+            name,
             email,
             password,
             currency
         } = normalizeRegistrationData(req.body);
 
-        if (!email || !password || !currency) {
+        if (!name || !email || !password || !currency) {
             return res.status(400).json({
-                error: "Email, password, and currency are required"
+                error: "Name ,email, password, and currency are required"
             });
             // returns sends the response & stops the route from continuing
         }
@@ -52,14 +53,15 @@ router.post("/register", async (req, res) => {
         const result = await pool.query(
         `
         INSERT INTO users (
+            name,
             email,
             password_hash,
             default_currency
         )
-        VALUES ($1, $2, $3)
-        RETURNING id, email, default_currency, created_at;
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, name, email, default_currency, created_at;
         `,
-        [email, passwordHash, currency]
+        [name ,email, passwordHash, currency]
     );
 
         res.status(201).json({

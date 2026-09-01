@@ -8,6 +8,7 @@ const rateLimit = require("express-rate-limit");
 
 const authRouter = require("./routes/auth");
 const transactionRouter = require("./routes/transactions");
+const userRouter = require("./routes/users");
 const authenticateToken = require("./middleware/auth");
 const { notFoundHandler } = require("./middleware/errorHandler");
 
@@ -48,6 +49,8 @@ app.use(
     authenticateToken,
     analyticsRouter
 );
+
+app.use("/users", authenticateToken, userRouter);
 
 app.use(notFoundHandler);
 
