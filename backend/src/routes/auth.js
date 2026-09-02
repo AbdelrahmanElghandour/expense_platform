@@ -36,8 +36,8 @@ router.post("/register", async (req, res) => {
             // returns sends the response & stops the route from continuing
         }
         const existingUser = await pool.query(
-        "SELECT id FROM users WHERE email = $1",
-        [email]
+            "SELECT id FROM users WHERE email = $1",
+            [email]
         );
 
         if (existingUser.rows.length > 0) {
@@ -51,7 +51,7 @@ router.post("/register", async (req, res) => {
         const passwordHash = await bcrypt.hash(password, 10);
 
         const result = await pool.query(
-        `
+            `
         INSERT INTO users (
             name,
             email,
@@ -61,8 +61,8 @@ router.post("/register", async (req, res) => {
         VALUES ($1, $2, $3, $4)
         RETURNING id, name, email, default_currency, created_at;
         `,
-        [name ,email, passwordHash, currency]
-    );
+            [name, email, passwordHash, currency]
+        );
 
         res.status(201).json({
             message: "Account created successfully",
@@ -80,8 +80,8 @@ router.post("/register", async (req, res) => {
 
         return res.status(500).json({
             error: "Registration failed"
-    });
-}
+        });
+    }
 });
 
 router.post("/login", async (req, res) => {
@@ -111,7 +111,7 @@ router.post("/login", async (req, res) => {
 
         // Don't reveal whether the email exists
         if (result.rows.length === 0) {
-            return res.status(401).json({
+            return res.status(400).json({
                 error: "Invalid email or password"
             });
         }
@@ -125,7 +125,7 @@ router.post("/login", async (req, res) => {
         );
 
         if (!passwordMatches) {
-            return res.status(401).json({
+            return res.status(400).json({
                 error: "Invalid email or password"
             });
         }

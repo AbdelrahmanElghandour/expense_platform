@@ -37,26 +37,26 @@ describe("POST /auth/register", () => {
         expect(response.body).toHaveProperty("error");
     });
     test("rejects a duplicate email", async () => {
-    const userData = {
-        email: "test@example.com",
-        password: "password123",
-        currency: "KRW"
-    };
+        const userData = {
+            email: "test@example.com",
+            password: "password123",
+            currency: "KRW"
+        };
 
-    const firstResponse = await request(app)
-        .post("/auth/register")
-        .send(userData);
+        const firstResponse = await request(app)
+            .post("/auth/register")
+            .send(userData);
 
-    expect(firstResponse.statusCode).toBe(201);
+        expect(firstResponse.statusCode).toBe(201);
 
-    const secondResponse = await request(app)
-        .post("/auth/register")
-        .send(userData);
+        const secondResponse = await request(app)
+            .post("/auth/register")
+            .send(userData);
 
-    expect(secondResponse.statusCode).toBe(409);
-    expect(secondResponse.body).toHaveProperty("error");
-});
-test("logs in with valid credentials", async () => {
+        expect(secondResponse.statusCode).toBe(409);
+        expect(secondResponse.body).toHaveProperty("error");
+    });
+    test("logs in with valid credentials", async () => {
         await request(app)
             .post("/auth/register")
             .send({
@@ -94,7 +94,7 @@ test("logs in with valid credentials", async () => {
                 password: "wrongpassword"
             });
 
-        expect(response.statusCode).toBe(401);
+        expect(response.statusCode).toBe(400);
         expect(response.body.error).toBe("Invalid email or password");
     });
 
@@ -106,7 +106,7 @@ test("logs in with valid credentials", async () => {
                 password: "password123"
             });
 
-        expect(response.statusCode).toBe(401);
+        expect(response.statusCode).toBe(400);
         expect(response.body.error).toBe("Invalid email or password");
     });
     test("rejects request without token", async () => {

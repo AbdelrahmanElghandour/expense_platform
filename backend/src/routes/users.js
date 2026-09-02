@@ -154,7 +154,7 @@ router.patch("/me/password", async (req, res) => {
         );
 
         if (!passwordMatches) {
-            return res.status(401).json({
+            return res.status(400).json({
                 error: "Current password is incorrect"
             });
         }
@@ -225,7 +225,7 @@ router.delete("/me", async (req, res) => {
         );
 
         if (!passwordMatches) {
-            return res.status(401).json({
+            return res.status(400).json({
                 error: "Incorrect password"
             });
         }
