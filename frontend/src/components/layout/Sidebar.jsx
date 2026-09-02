@@ -41,7 +41,14 @@ function Sidebar() {
                     Transactions
                 </NavLink>
             </nav>
-
+            <NavLink
+                to="/settings"
+                className={({ isActive }) =>
+                    isActive ? "sidebar-link active" : "sidebar-link"
+                }
+            >
+                Settings
+            </NavLink>
             <button
                 className="sidebar-logout"
                 onClick={handleLogout}

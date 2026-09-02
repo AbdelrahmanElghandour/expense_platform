@@ -5,6 +5,7 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import SettingsPage from "./pages/SettingsPage";
 
 function App() {
   return (
@@ -40,6 +41,14 @@ function App() {
       <Route
         path="/"
         element={<Navigate to="/dashboard" replace />}
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        }
       />
     </Routes>
   );
