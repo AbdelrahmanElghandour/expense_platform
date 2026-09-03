@@ -1,9 +1,4 @@
-const supportedCurrencies = [
-    "KRW",
-    "USD",
-    "EUR",
-    "JPY"
-];
+const { validateCurrency } = require("./currencyValidation");
 
 function validateName(name) {
     if (typeof name !== "string") {
@@ -18,20 +13,6 @@ function validateName(name) {
 
     if (normalizedName.length > 100) {
         return "Name must be 100 characters or fewer";
-    }
-
-    return null;
-}
-
-function validateCurrency(currency) {
-    if (typeof currency !== "string") {
-        return "Currency must be a string";
-    }
-
-    const normalizedCurrency = currency.trim().toUpperCase();
-
-    if (!supportedCurrencies.includes(normalizedCurrency)) {
-        return "Unsupported currency";
     }
 
     return null;

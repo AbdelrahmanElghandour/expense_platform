@@ -1,3 +1,5 @@
+const { validateCurrency } = require("./currencyValidation");
+
 function normalizeEmail(email) {
     if (typeof email !== "string") {
         return email;
@@ -64,34 +66,7 @@ function validatePassword(password) {
     return null;
 }
 
-const supportedCurrencies = [
-    "KRW",
-    "USD",
-    "EUR",
-    "JPY"
-];
 
-function normalizeCurrency(currency) {
-    if (typeof currency !== "string") {
-        return currency;
-    }
-
-    return currency.trim().toUpperCase();
-}
-
-function validateCurrency(currency) {
-    if (typeof currency !== "string") {
-        return "Currency must be a string";
-    }
-
-    const normalizedCurrency = normalizeCurrency(currency);
-
-    if (!supportedCurrencies.includes(normalizedCurrency)) {
-        return "Unsupported currency";
-    }
-
-    return null;
-}
 
 function validateRegistration(data) {
     const nameError = validateName(data.name);
@@ -114,7 +89,7 @@ function normalizeRegistrationData(data) {
         name: data.name.trim(),
         email: normalizeEmail(data.email),
         password: data.password,
-        currency: data.currency
+        currency: data.currency.trim().toUpperCase()
     };
 }
 

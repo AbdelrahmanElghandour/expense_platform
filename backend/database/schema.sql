@@ -7,7 +7,7 @@ CREATE TABLE users (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT valid_default_currency
-        CHECK (default_currency IN ('KRW', 'USD', 'EUR', 'JPY'))
+        CHECK (default_currency IN ('KRW', 'USD', 'EUR', 'JPY', 'EGP', 'GBP', 'CAD', 'AUD', 'CNY', 'SGD'))
 );
 
 

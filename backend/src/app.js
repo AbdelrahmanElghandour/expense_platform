@@ -52,6 +52,11 @@ app.use(
 
 app.use("/users", authenticateToken, userRouter);
 
+const currencyRouter =
+    require("./routes/currencies");
+
+app.use("/currencies", currencyRouter);
+
 app.use(notFoundHandler);
 
 module.exports = app;
