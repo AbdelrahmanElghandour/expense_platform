@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "../styles/auth.css";
 
@@ -8,10 +8,36 @@ function RegisterPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [currency, setCurrency] = useState("KRW");
+    const [currency, setCurrency] = useState("");
+    const [currencies, setCurrencies] = useState([]);
     const [error, setError] = useState("");
+    const [, setIsLoadingCurrencies] =
+        useState(true);
 
     const navigate = useNavigate();
+
+    useEffect(() => {
+        async function fetchCurrencies() {
+            try {
+                const response = await api.get("/currencies");
+
+                const fetchedCurrencies =
+                    response.data.currencies;
+
+                setCurrencies(fetchedCurrencies);
+
+                if (fetchedCurrencies.length > 0) {
+                    setCurrency(fetchedCurrencies[0].code);
+                }
+            } catch {
+                setError("Failed to load currencies");
+            } finally {
+                setIsLoadingCurrencies(false);
+            }
+        }
+
+        fetchCurrencies();
+    }, []);
 
     async function handleSubmit(event) {
         event.preventDefault();
@@ -97,21 +123,14 @@ function RegisterPage() {
                                 setCurrency(event.target.value)
                             }
                         >
-                            <option value="KRW">
-                                KRW — Korean Won
-                            </option>
-
-                            <option value="USD">
-                                USD — US Dollar
-                            </option>
-
-                            <option value="EUR">
-                                EUR — Euro
-                            </option>
-
-                            <option value="EGP">
-                                EGP — Egyptian Pound
-                            </option>
+                            {currencies.map((currency) => (
+                                <option
+                                    key={currency.code}
+                                    value={currency.code}
+                                >
+                                    {currency.code} — {currency.name}
+                                </option>
+                            ))}
                         </select>
                     </div>
 

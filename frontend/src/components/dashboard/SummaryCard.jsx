@@ -1,4 +1,6 @@
-function SummaryCard({ title, value }) {
+import { formatCurrency } from "../../utils/formatCurrency";
+
+function SummaryCard({ title, value, currency }) {
     return (
         <div className="summary-card">
             <p className="summary-card-title">
@@ -6,7 +8,7 @@ function SummaryCard({ title, value }) {
             </p>
 
             <p className="summary-card-value">
-                {value}
+                {formatCurrency(value, currency)}
             </p>
         </div>
     );

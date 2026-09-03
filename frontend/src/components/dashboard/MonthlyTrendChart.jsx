@@ -8,8 +8,9 @@ import {
     Legend,
     ResponsiveContainer
 } from "recharts";
+import { formatCurrency } from "../../utils/formatCurrency";
 
-function MonthlyTrendChart({ trends }) {
+function MonthlyTrendChart({ trends, currency }) {
     const chartData = trends.map((trend) => ({
         period: trend.period,
         income: Number(trend.income),
@@ -24,9 +25,17 @@ function MonthlyTrendChart({ trends }) {
 
                     <XAxis dataKey="period" />
 
-                    <YAxis />
+                    <YAxis
+                        tickFormatter={(value) =>
+                            formatCurrency(value, currency)
+                        }
+                    />
 
-                    <Tooltip />
+                    <Tooltip
+                        formatter={(value) =>
+                            formatCurrency(value, currency)
+                        }
+                    />
 
                     <Legend />
 

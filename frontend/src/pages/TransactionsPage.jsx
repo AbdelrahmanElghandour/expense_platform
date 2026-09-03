@@ -3,10 +3,35 @@ import api from "../api/api";
 import CreateTransactionForm from "../components/CreateTransactionForm";
 import EditTransactionForm from "../components/EditTransactionForm";
 import AppLayout from "../components/layout/AppLayout";
+import { useAuth } from "../context/useAuth";
+import { formatCurrency } from "../utils/formatCurrency";
 import "../styles/transactions.css";
 
+async function getTransactions(page, appliedFilters) {
+    const response = await api.get("/transactions", {
+        params: {
+            page,
+            limit: 5,
+            ...(appliedFilters.type && {
+                type: appliedFilters.type
+            }),
+            ...(appliedFilters.category && {
+                category: appliedFilters.category
+            }),
+            ...(appliedFilters.startDate && {
+                startDate: appliedFilters.startDate
+            }),
+            ...(appliedFilters.endDate && {
+                endDate: appliedFilters.endDate
+            })
+        }
+    });
+
+    return response.data;
+}
 
 function TransactionsPage() {
+    const { defaultCurrency } = useAuth();
     const [transactions, setTransactions] = useState([]);
     const [error, setError] = useState("");
     const [editingTransaction, setEditingTransaction] = useState(null);
@@ -34,33 +59,19 @@ function TransactionsPage() {
         try {
             setError("");
 
-            const response = await api.get("/transactions", {
-                params: {
-                    page,
-                    limit: 5,
-                    ...(appliedFilters.type && {
-                        type: appliedFilters.type
-                    }),
-                    ...(appliedFilters.category && {
-                        category: appliedFilters.category
-                    }),
-                    ...(appliedFilters.startDate && {
-                        startDate: appliedFilters.startDate
-                    }),
-                    ...(appliedFilters.endDate && {
-                        endDate: appliedFilters.endDate
-                    })
-                }
-            });
+            const data = await getTransactions(
+                page,
+                appliedFilters
+            );
 
-            setTransactions(response.data.transactions);
-            setTotalPages(response.data.totalPages);
+            setTransactions(data.transactions);
+            setTotalPages(data.totalPages);
 
             if (
-                response.data.totalPages > 0 &&
-                page > response.data.totalPages
+                data.totalPages > 0 &&
+                page > data.totalPages
             ) {
-                setPage(response.data.totalPages);
+                setPage(data.totalPages);
             }
         } catch (error) {
             setError(
@@ -70,7 +81,46 @@ function TransactionsPage() {
         }
     }
     useEffect(() => {
-        fetchTransactions();
+        let isCurrent = true;
+
+        async function loadTransactions() {
+            try {
+                const data = await getTransactions(
+                    page,
+                    appliedFilters
+                );
+
+                if (!isCurrent) {
+                    return;
+                }
+
+                setError("");
+                setTransactions(data.transactions);
+                setTotalPages(data.totalPages);
+
+                if (
+                    data.totalPages > 0 &&
+                    page > data.totalPages
+                ) {
+                    setPage(data.totalPages);
+                }
+            } catch (error) {
+                if (!isCurrent) {
+                    return;
+                }
+
+                setError(
+                    error.response?.data?.error ||
+                    "Failed to load transactions"
+                );
+            }
+        }
+
+        loadTransactions();
+
+        return () => {
+            isCurrent = false;
+        };
     }, [page, appliedFilters]);
 
     useEffect(() => {
@@ -297,7 +347,10 @@ function TransactionsPage() {
                                                     </td>
 
                                                     <td className="transaction-amount">
-                                                        {Number(transaction.amount).toLocaleString()}
+                                                        {formatCurrency(
+                                                            transaction.amount,
+                                                            defaultCurrency
+                                                        )}
                                                     </td>
 
                                                     <td>
@@ -413,9 +466,10 @@ function TransactionsPage() {
                                 </span>
 
                                 <span className="detail-value">
-                                    {Number(
-                                        selectedTransaction.amount
-                                    ).toLocaleString()}
+                                    {formatCurrency(
+                                        selectedTransaction.amount,
+                                        defaultCurrency
+                                    )}
                                 </span>
                             </div>
 

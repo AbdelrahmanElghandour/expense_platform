@@ -1,6 +1,6 @@
 import { useState } from "react";
 import api from "../api/api";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 
@@ -22,7 +22,7 @@ function LoginPage() {
                 password
             });
 
-            login(response.data.token);
+            login(response.data.token, response.data.user);
             navigate("/dashboard");
         } catch (error) {
             setError(

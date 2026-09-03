@@ -6,101 +6,103 @@ import SummaryCard from "../components/dashboard/SummaryCard";
 import "../styles/dashboard.css";
 import MonthlyTrendChart from "../components/dashboard/MonthlyTrendChart";
 import CategoryDonutChart from "../components/dashboard/CategoryDonutChart";
+import { useAuth } from "../context/useAuth";
+
+function formatDate(date) {
+    const year = date.getFullYear();
+
+    const month = String(
+        date.getMonth() + 1
+    ).padStart(2, "0");
+
+    const day = String(
+        date.getDate()
+    ).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
+
+function getCategoryDateRange(period) {
+    const now = new Date();
+
+    if (period === "all") {
+        return {};
+    }
+
+    if (period === "thisMonth") {
+        const startDate = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            1
+        );
+
+        const endDate = new Date(
+            now.getFullYear(),
+            now.getMonth() + 1,
+            0
+        );
+
+        return {
+            startDate: formatDate(startDate),
+            endDate: formatDate(endDate)
+        };
+    }
+
+    if (period === "lastMonth") {
+        const startDate = new Date(
+            now.getFullYear(),
+            now.getMonth() - 1,
+            1
+        );
+
+        const endDate = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            0
+        );
+
+        return {
+            startDate: formatDate(startDate),
+            endDate: formatDate(endDate)
+        };
+    }
+
+    if (period === "last3Months") {
+        const startDate = new Date(
+            now.getFullYear(),
+            now.getMonth() - 2,
+            1
+        );
+
+        return {
+            startDate: formatDate(startDate),
+            endDate: formatDate(now)
+        };
+    }
+
+    if (period === "thisYear") {
+        const startDate = new Date(
+            now.getFullYear(),
+            0,
+            1
+        );
+
+        return {
+            startDate: formatDate(startDate),
+            endDate: formatDate(now)
+        };
+    }
+
+    return {};
+}
 
 function DashboardPage() {
+    const { defaultCurrency } = useAuth();
     const [summary, setSummary] = useState(null);
     const [categoryAnalytics, setCategoryAnalytics] = useState(null);
     const [trends, setTrends] = useState([]);
     const [error, setError] = useState("");
     const [categoryPeriod, setCategoryPeriod] = useState("all");
-
-    function formatDate(date) {
-        const year = date.getFullYear();
-
-        const month = String(
-            date.getMonth() + 1
-        ).padStart(2, "0");
-
-        const day = String(
-            date.getDate()
-        ).padStart(2, "0");
-
-        return `${year}-${month}-${day}`;
-    }
-
-    function getCategoryDateRange(period) {
-        const now = new Date();
-
-        if (period === "all") {
-            return {};
-        }
-
-        if (period === "thisMonth") {
-            const startDate = new Date(
-                now.getFullYear(),
-                now.getMonth(),
-                1
-            );
-
-            const endDate = new Date(
-                now.getFullYear(),
-                now.getMonth() + 1,
-                0
-            );
-
-            return {
-                startDate: formatDate(startDate),
-                endDate: formatDate(endDate)
-            };
-        }
-
-        if (period === "lastMonth") {
-            const startDate = new Date(
-                now.getFullYear(),
-                now.getMonth() - 1,
-                1
-            );
-
-            const endDate = new Date(
-                now.getFullYear(),
-                now.getMonth(),
-                0
-            );
-
-            return {
-                startDate: formatDate(startDate),
-                endDate: formatDate(endDate)
-            };
-        }
-
-        if (period === "last3Months") {
-            const startDate = new Date(
-                now.getFullYear(),
-                now.getMonth() - 2,
-                1
-            );
-
-            return {
-                startDate: formatDate(startDate),
-                endDate: formatDate(now)
-            };
-        }
-
-        if (period === "thisYear") {
-            const startDate = new Date(
-                now.getFullYear(),
-                0,
-                1
-            );
-
-            return {
-                startDate: formatDate(startDate),
-                endDate: formatDate(now)
-            };
-        }
-
-        return {};
-    }
 
     useEffect(() => {
         async function fetchDashboardData() {
@@ -175,16 +177,19 @@ function DashboardPage() {
                             <SummaryCard
                                 title="Total Income"
                                 value={summary.totalIncome}
+                                currency={defaultCurrency}
                             />
 
                             <SummaryCard
                                 title="Total Expenses"
                                 value={summary.totalExpenses}
+                                currency={defaultCurrency}
                             />
 
                             <SummaryCard
                                 title="Balance"
                                 value={summary.balance}
+                                currency={defaultCurrency}
                             />
                         </div>
                     </section>
@@ -208,7 +213,10 @@ function DashboardPage() {
                                 No trend data found.
                             </p>
                         ) : (
-                            <MonthlyTrendChart trends={trends} />
+                            <MonthlyTrendChart
+                                trends={trends}
+                                currency={defaultCurrency}
+                            />
                         )}
                     </section>
 
@@ -244,6 +252,7 @@ function DashboardPage() {
                                 <CategoryDonutChart
                                     categories={categoryAnalytics.categories}
                                     totalExpenses={categoryAnalytics.totalExpenses}
+                                    currency={defaultCurrency}
                                 />
                             ))}
                     </section>

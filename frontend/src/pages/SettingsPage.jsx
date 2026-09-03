@@ -3,7 +3,7 @@ import api from "../api/api";
 import "../styles/settings.css";
 import AppLayout from "../components/layout/AppLayout";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 
 function SettingsPage() {
@@ -25,9 +25,14 @@ function SettingsPage() {
     const [deletePassword, setDeletePassword] = useState("");
     const [deleteError, setDeleteError] = useState("");
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isLoadingCurrencies, setIsLoadingCurrencies] =
+        useState(true);
+    const [currencies, setCurrencies] = useState([]);
 
     const navigate = useNavigate();
-    const { logout } = useAuth();
+    const { logout, updateUser } = useAuth();
+
+
 
     useEffect(() => {
         async function fetchUser() {
@@ -39,6 +44,7 @@ function SettingsPage() {
                 setUser(fetchedUser);
                 setName(fetchedUser.name || "");
                 setCurrency(fetchedUser.default_currency || "");
+                updateUser(fetchedUser);
             } catch (error) {
                 setError(
                     error.response?.data?.error ||
@@ -48,7 +54,34 @@ function SettingsPage() {
         }
 
         fetchUser();
+    }, [updateUser]);
+
+
+    useEffect(() => {
+        async function fetchCurrencies() {
+            try {
+                const response = await api.get("/currencies");
+
+                const fetchedCurrencies =
+                    response.data.currencies;
+
+                setCurrencies(fetchedCurrencies);
+
+                setCurrency((currentCurrency) =>
+                    currentCurrency ||
+                    fetchedCurrencies[0]?.code ||
+                    ""
+                );
+            } catch {
+                setError("Failed to load currencies");
+            } finally {
+                setIsLoadingCurrencies(false);
+            }
+        }
+
+        fetchCurrencies();
     }, []);
+
 
     async function handleProfileSubmit(event) {
         event.preventDefault();
@@ -71,6 +104,7 @@ function SettingsPage() {
             setUser(updatedUser);
             setName(updatedUser.name || "");
             setCurrency(updatedUser.default_currency || "");
+            updateUser(updatedUser);
 
             setSuccess("Profile updated successfully");
         } catch (error) {
@@ -217,27 +251,20 @@ function SettingsPage() {
                             </label>
 
                             <select
-                                id="currency"
                                 value={currency}
                                 onChange={(event) =>
                                     setCurrency(event.target.value)
                                 }
+                                disabled={isLoadingCurrencies}
                             >
-                                <option value="KRW">
-                                    KRW — Korean Won
-                                </option>
-
-                                <option value="USD">
-                                    USD — US Dollar
-                                </option>
-
-                                <option value="EUR">
-                                    EUR — Euro
-                                </option>
-
-                                <option value="JPY">
-                                    JPY — Japanese Yen
-                                </option>
+                                {currencies.map((currencyOption) => (
+                                    <option
+                                        key={currencyOption.code}
+                                        value={currencyOption.code}
+                                    >
+                                        {currencyOption.code} — {currencyOption.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 

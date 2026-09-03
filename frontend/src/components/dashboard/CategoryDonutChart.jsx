@@ -5,6 +5,7 @@ import {
     Tooltip,
     ResponsiveContainer
 } from "recharts";
+import { formatCurrency } from "../../utils/formatCurrency";
 
 const COLORS = [
     "#3b82f6",
@@ -19,7 +20,8 @@ const COLORS = [
 
 function CategoryDonutChart({
     categories,
-    totalExpenses
+    totalExpenses,
+    currency
 }) {
     const chartData = categories.map((category) => ({
         name: category.category,
@@ -71,10 +73,14 @@ function CategoryDonutChart({
                             dominantBaseline="middle"
                             className="donut-center-value"
                         >
-                            {Number(totalExpenses).toLocaleString()}
+                            {formatCurrency(totalExpenses, currency)}
                         </text>
 
-                        <Tooltip />
+                        <Tooltip
+                            formatter={(value) =>
+                                formatCurrency(value, currency)
+                            }
+                        />
                     </PieChart>
                 </ResponsiveContainer>
             </div>
