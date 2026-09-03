@@ -103,9 +103,14 @@ function DashboardPage() {
     const [trends, setTrends] = useState([]);
     const [error, setError] = useState("");
     const [categoryPeriod, setCategoryPeriod] = useState("all");
+    const [isDashboardLoading, setIsDashboardLoading] = useState(true);
+
+    const [isCategoryLoading, setIsCategoryLoading] = useState(true);
 
     useEffect(() => {
         async function fetchDashboardData() {
+            setIsDashboardLoading(true);
+
             try {
                 const summaryResponse = await api.get(
                     "/analytics/summary"
@@ -121,15 +126,14 @@ function DashboardPage() {
                 );
 
                 setSummary(summaryResponse.data);
-
-                setTrends(
-                    trendsResponse.data.trends
-                );
+                setTrends(trendsResponse.data.trends);
             } catch (error) {
                 setError(
                     error.response?.data?.error ||
                     "Failed to fetch dashboard data"
                 );
+            } finally {
+                setIsDashboardLoading(false);
             }
         }
 
@@ -137,6 +141,8 @@ function DashboardPage() {
     }, []);
     useEffect(() => {
         async function fetchCategoryAnalytics() {
+            setIsCategoryLoading(true);
+
             try {
                 const params =
                     getCategoryDateRange(categoryPeriod);
@@ -152,11 +158,14 @@ function DashboardPage() {
                     error.response?.data?.error ||
                     "Failed to fetch category analytics"
                 );
+            } finally {
+                setIsCategoryLoading(false);
             }
         }
 
         fetchCategoryAnalytics();
     }, [categoryPeriod]);
+
 
     return (
         <AppLayout>
@@ -169,10 +178,12 @@ function DashboardPage() {
                 {error && <p>{error}</p>}
 
                 {/* Summary */}
-                {summary && (
-                    <section>
-                        <h2>Overview</h2>
+                <section>
+                    <h2>Overview</h2>
 
+                    {isDashboardLoading ? (
+                        <p>Loading summary...</p>
+                    ) : summary ? (
                         <div className="summary-grid">
                             <SummaryCard
                                 title="Total Income"
@@ -192,8 +203,12 @@ function DashboardPage() {
                                 currency={defaultCurrency}
                             />
                         </div>
-                    </section>
-                )}
+                    ) : (
+                        <p className="empty-state">
+                            No summary data found.
+                        </p>
+                    )}
+                </section>
 
                 <hr />
 
@@ -208,7 +223,9 @@ function DashboardPage() {
                             </div>
                         </div>
 
-                        {trends.length === 0 ? (
+                        {isDashboardLoading ? (
+                            <p>Loading trends...</p>
+                        ) : trends.length === 0 ? (
                             <p className="empty-state">
                                 No trend data found.
                             </p>
@@ -243,8 +260,10 @@ function DashboardPage() {
                             </select>
                         </div>
 
-                        {categoryAnalytics &&
-                            (categoryAnalytics.categories.length === 0 ? (
+                        {isCategoryLoading ? (
+                            <p>Loading category analytics...</p>
+                        ) : categoryAnalytics ? (
+                            categoryAnalytics.categories.length === 0 ? (
                                 <p className="empty-state">
                                     No expense data found.
                                 </p>
@@ -254,10 +273,16 @@ function DashboardPage() {
                                     totalExpenses={categoryAnalytics.totalExpenses}
                                     currency={defaultCurrency}
                                 />
-                            ))}
+                            )
+                        ) : (
+                            <p className="empty-state">
+                                No category data found.
+                            </p>
+                        )}
                     </section>
 
                 </div>
+
                 <hr />
             </div>
         </AppLayout>
