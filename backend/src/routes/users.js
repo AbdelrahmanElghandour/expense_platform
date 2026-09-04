@@ -108,6 +108,12 @@ router.patch("/me", async (req, res) => {
 
 router.patch("/me/password", async (req, res) => {
     try {
+        if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+            return res.status(400).json({
+                error: "Request body must be an object"
+            });
+        }
+
         const {
             currentPassword,
             newPassword
@@ -191,6 +197,12 @@ router.patch("/me/password", async (req, res) => {
 
 router.delete("/me", async (req, res) => {
     try {
+        if (!req.body || typeof req.body !== "object" || Array.isArray(req.body)) {
+            return res.status(400).json({
+                error: "Request body must be an object"
+            });
+        }
+
         const { password } = req.body;
 
         if (

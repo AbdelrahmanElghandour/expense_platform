@@ -1,11 +1,11 @@
 const pool = require("../db");
 
-async function resolveCategoryId(userId, category) {
+async function resolveCategoryId(userId, category, database = pool) {
     if (category === null || category === undefined) {
         return null;
     }
 
-    const categoryResult = await pool.query(
+    const categoryResult = await database.query(
         `
         SELECT id
         FROM categories
@@ -19,7 +19,7 @@ async function resolveCategoryId(userId, category) {
         return categoryResult.rows[0].id;
     }
 
-    const newCategory = await pool.query(
+    const newCategory = await database.query(
         `
         INSERT INTO categories (user_id, name)
         VALUES ($1, $2)
@@ -35,7 +35,7 @@ async function resolveCategoryId(userId, category) {
 
     // Another request may have created the category
     // after our initial SELECT but before our INSERT.
-    const existingCategory = await pool.query(
+    const existingCategory = await database.query(
         `
         SELECT id
         FROM categories

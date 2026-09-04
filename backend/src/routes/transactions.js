@@ -155,7 +155,11 @@ router.get("/", async (req, res) => {
 
 
 router.post("/", async (req, res) => {
+    let client;
+
     try {
+        client = await pool.connect();
+
         const validationError = validateCreateTransaction(req.body);
 
         if (validationError) {
@@ -173,12 +177,15 @@ router.post("/", async (req, res) => {
             transactionDate
         } = normalizeTransactionData(req.body);
 
+        await client.query("BEGIN");
+
         const categoryId = await resolveCategoryId(
             req.user.userId,
-            category
+            category,
+            client
         );
 
-        const result = await pool.query(
+        const result = await client.query(
             `
             INSERT INTO transactions (
                 user_id,
@@ -203,19 +210,30 @@ router.post("/", async (req, res) => {
             ]
         );
 
-        res.status(201).json(result.rows[0]);
+        await client.query("COMMIT");
+
+        return res.status(201).json(result.rows[0]);
 
     } catch (error) {
+        if (client) {
+            await client.query("ROLLBACK").catch(() => { });
+        }
         console.error(error);
 
-        res.status(500).json({
+        return res.status(500).json({
             error: "Failed to create transaction"
         });
+    } finally {
+        client?.release();
     }
 });
 
 router.patch("/:transactionId", async (req, res) => {
+    let client;
+
     try {
+        client = await pool.connect();
+
         const { transactionId } = req.params;
 
         const transactionIdError = validateTransactionId(transactionId);
@@ -245,7 +263,7 @@ router.patch("/:transactionId", async (req, res) => {
         } = normalizeTransactionData(req.body);
 
         // Make sure the transaction belongs to the logged-in user
-        const transactionResult = await pool.query(
+        const transactionResult = await client.query(
             `
             SELECT id
             FROM transactions
@@ -261,13 +279,16 @@ router.patch("/:transactionId", async (req, res) => {
             });
         }
 
+        await client.query("BEGIN");
+
         // Only resolve category if the client actually provided it
         let categoryId;
 
         if (category !== undefined) {
             categoryId = await resolveCategoryId(
                 userId,
-                category
+                category,
+                client
             );
         }
 
@@ -311,7 +332,7 @@ router.patch("/:transactionId", async (req, res) => {
         values.push(transactionId);
         values.push(userId);
 
-        const result = await pool.query(
+        const result = await client.query(
             `
             UPDATE transactions
             SET ${updates.join(", ")}
@@ -322,14 +343,21 @@ router.patch("/:transactionId", async (req, res) => {
             values
         );
 
+        await client.query("COMMIT");
+
         return res.json(result.rows[0]);
 
     } catch (error) {
+        if (client) {
+            await client.query("ROLLBACK").catch(() => { });
+        }
         console.error(error);
 
         return res.status(500).json({
             error: "Failed to update transaction"
         });
+    } finally {
+        client?.release();
     }
 });
 

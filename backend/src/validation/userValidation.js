@@ -19,6 +19,10 @@ function validateName(name) {
 }
 
 function validateProfileUpdate(data) {
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+        return "Request body must be an object";
+    }
+
     if (
         data.name === undefined &&
         data.currency === undefined

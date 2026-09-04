@@ -11,6 +11,7 @@ describe("POST /auth/register", () => {
         const response = await request(app)
             .post("/auth/register")
             .send({
+                name: "Test User",
                 email: "test@example.com",
                 password: "password123",
                 currency: "KRW"
@@ -28,6 +29,7 @@ describe("POST /auth/register", () => {
         const response = await request(app)
             .post("/auth/register")
             .send({
+                name: "Test User",
                 email: "bad-email",
                 password: "password123",
                 currency: "KRW"
@@ -38,6 +40,7 @@ describe("POST /auth/register", () => {
     });
     test("rejects a duplicate email", async () => {
         const userData = {
+            name: "Test User",
             email: "test@example.com",
             password: "password123",
             currency: "KRW"
@@ -60,6 +63,7 @@ describe("POST /auth/register", () => {
         await request(app)
             .post("/auth/register")
             .send({
+                name: "Test User",
                 email: "test@example.com",
                 password: "password123",
                 currency: "KRW"
@@ -82,6 +86,7 @@ describe("POST /auth/register", () => {
         await request(app)
             .post("/auth/register")
             .send({
+                name: "Test User",
                 email: "test@example.com",
                 password: "password123",
                 currency: "KRW"
@@ -128,6 +133,7 @@ describe("POST /auth/register", () => {
         await request(app)
             .post("/auth/register")
             .send({
+                name: "Test User",
                 email: "test@example.com",
                 password: "password123",
                 currency: "KRW"

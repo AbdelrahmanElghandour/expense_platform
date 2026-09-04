@@ -10,7 +10,10 @@ const authRouter = require("./routes/auth");
 const transactionRouter = require("./routes/transactions");
 const userRouter = require("./routes/users");
 const authenticateToken = require("./middleware/auth");
-const { notFoundHandler } = require("./middleware/errorHandler");
+const {
+    notFoundHandler,
+    errorHandler
+} = require("./middleware/errorHandler");
 
 const app = express();
 
@@ -58,5 +61,6 @@ const currencyRouter =
 app.use("/currencies", currencyRouter);
 
 app.use(notFoundHandler);
+app.use(errorHandler);
 
 module.exports = app;

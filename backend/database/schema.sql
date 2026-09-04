@@ -5,11 +5,8 @@ CREATE TABLE users (
     default_currency CHAR(3) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT valid_default_currency
-        CHECK (default_currency IN ('KRW', 'USD', 'EUR', 'JPY', 'EGP', 'GBP', 'CAD', 'AUD', 'CNY', 'SGD'))
+    name TEXT
 );
-
 
 CREATE TABLE categories (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -21,25 +18,26 @@ CREATE TABLE categories (
     CONSTRAINT fk_categories_user
         FOREIGN KEY (user_id)
         REFERENCES users(id)
-        ON DELETE CASCADE
-);
+        ON DELETE CASCADE,
 
+    CONSTRAINT unique_category_name_per_user
+        UNIQUE (user_id, name)
+);
 
 CREATE UNIQUE INDEX unique_category_per_user
 ON categories (user_id, LOWER(name));
-
 
 CREATE TABLE transactions (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     user_id BIGINT NOT NULL,
     category_id BIGINT,
-    type VARCHAR(20) NOT NULL,
     amount NUMERIC(12,2) NOT NULL,
     payment_method VARCHAR(50),
     notes TEXT,
     transaction_date DATE NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    type VARCHAR(20) NOT NULL,
 
     CONSTRAINT fk_transactions_user
         FOREIGN KEY (user_id)
@@ -57,7 +55,6 @@ CREATE TABLE transactions (
     CONSTRAINT valid_transaction_type
         CHECK (type IN ('expense', 'income'))
 );
-
 
 CREATE INDEX idx_transactions_user_date
 ON transactions (user_id, transaction_date DESC);

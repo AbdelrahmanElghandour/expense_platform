@@ -119,10 +119,10 @@ function normalizeTransactionData(data) {
                 ? data.category.trim()
                 : data.category,
 
-        paymentMethod:
-            typeof data.paymentMethod === "string"
-                ? data.paymentMethod.trim()
-                : data.paymentMethod,
+        payment_method:
+            typeof data.payment_method === "string"
+                ? data.payment_method.trim()
+                : data.payment_method,
 
         notes:
             typeof data.notes === "string"
@@ -132,11 +132,15 @@ function normalizeTransactionData(data) {
 }
 
 function validateCreateTransaction(data) {
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+        return "Request body must be an object";
+    }
+
     const errors = [
         validateType(data.type),
         validateAmount(data.amount),
         validateCategory(data.category),
-        validatePaymentMethod(data.paymentMethod),
+        validatePaymentMethod(data.payment_method),
         validateNotes(data.notes),
         validateTransactionDate(data.transactionDate)
     ];
@@ -145,6 +149,10 @@ function validateCreateTransaction(data) {
 }
 
 function validatePatchTransaction(data) {
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+        return "Request body must be an object";
+    }
+
     if (Object.keys(data).length === 0) {
         return "No fields provided to update";
     }
@@ -164,8 +172,8 @@ function validatePatchTransaction(data) {
         if (error) return error;
     }
 
-    if (data.paymentMethod !== undefined) {
-        const error = validatePaymentMethod(data.paymentMethod);
+    if (data.payment_method !== undefined) {
+        const error = validatePaymentMethod(data.payment_method);
         if (error) return error;
     }
 

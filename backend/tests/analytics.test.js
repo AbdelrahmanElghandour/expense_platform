@@ -10,6 +10,7 @@ beforeEach(async () => {
     const registerResponse = await request(app)
         .post("/auth/register")
         .send({
+            name: "Test User",
             email: "test@example.com",
             password: "password123",
             currency: "KRW"

@@ -69,6 +69,10 @@ function validatePassword(password) {
 
 
 function validateRegistration(data) {
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+        return "Request body must be an object";
+    }
+
     const nameError = validateName(data.name);
     if (nameError) return nameError;
 
@@ -95,6 +99,10 @@ function normalizeRegistrationData(data) {
 
 
 function validateLogin(data) {
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+        return "Request body must be an object";
+    }
+
     if (typeof data.email !== "string") {
         return "Email must be a string";
     }
