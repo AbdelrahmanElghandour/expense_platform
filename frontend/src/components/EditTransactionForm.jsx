@@ -22,10 +22,13 @@ function EditTransactionForm({
     const [transactionDate, setTransactionDate] = useState(
         transaction.transaction_date
     );
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function handleSubmit(event) {
         event.preventDefault();
+
         setError("");
+        setIsSubmitting(true);
 
         try {
             await api.patch(
@@ -40,15 +43,16 @@ function EditTransactionForm({
                 }
             );
 
-            onTransactionUpdated();
+            await onTransactionUpdated();
         } catch (error) {
             setError(
                 error.response?.data?.error ||
                 "Failed to update transaction"
             );
+        } finally {
+            setIsSubmitting(false);
         }
     }
-
     return (
         <form
             className="edit-transaction-form"
@@ -153,6 +157,7 @@ function EditTransactionForm({
                     className="secondary-button"
                     type="button"
                     onClick={onCancel}
+                    disabled={isSubmitting}
                 >
                     Cancel
                 </button>
@@ -160,8 +165,11 @@ function EditTransactionForm({
                 <button
                     className="primary-button"
                     type="submit"
+                    disabled={isSubmitting}
                 >
-                    Save Changes
+                    {isSubmitting
+                        ? "Saving..."
+                        : "Save Changes"}
                 </button>
             </div>
         </form>

@@ -9,26 +9,42 @@ function CreateTransactionForm({ onTransactionCreated }) {
     const [payment_method, setPaymentMethod] = useState("");
     const [notes, setNotes] = useState("");
     const [transactionDate, setTransactionDate] = useState("");
+    const [success, setSuccess] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function handleSubmit(event) {
         event.preventDefault();
+
         setError("");
+        setSuccess("");
+        setIsSubmitting(true);
 
         try {
             await api.post("/transactions", {
                 type,
                 amount: Number(amount),
                 category,
-                payment_method: payment_method,
+                payment_method,
                 notes,
                 transactionDate
             });
-            onTransactionCreated();
+
+            await onTransactionCreated();
+
+            setSuccess("Transaction added successfully");
+
+            setAmount("");
+            setCategory("");
+            setPaymentMethod("");
+            setNotes("");
+            setTransactionDate("");
         } catch (error) {
             setError(
                 error.response?.data?.error ||
                 "Failed to create transaction"
             );
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
@@ -123,13 +139,21 @@ function CreateTransactionForm({ onTransactionCreated }) {
                     {error}
                 </p>
             )}
+            {success && (
+                <p className="form-success">
+                    {success}
+                </p>
+            )}
 
             <div className="transaction-form-actions">
                 <button
                     className="primary-button"
                     type="submit"
+                    disabled={isSubmitting}
                 >
-                    Add Transaction
+                    {isSubmitting
+                        ? "Adding..."
+                        : "Add Transaction"}
                 </button>
             </div>
         </form>

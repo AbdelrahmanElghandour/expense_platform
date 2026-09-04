@@ -48,6 +48,8 @@ function TransactionsPage() {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [selectedTransaction, setSelectedTransaction] = useState(null);
+    const [deletingTransactionId, setDeletingTransactionId] =
+        useState(null);
 
     // Used to trigger a new fetch when Apply Filters is clicked
     const [appliedFilters, setAppliedFilters] = useState({
@@ -152,14 +154,36 @@ function TransactionsPage() {
     }, [selectedTransaction]);
 
     async function handleDelete(transactionId) {
+        const confirmed = window.confirm(
+            "Are you sure you want to delete this transaction?"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        setDeletingTransactionId(transactionId);
+        setError("");
+
         try {
-            await api.delete(`/transactions/${transactionId}`);
-            fetchTransactions();
+            await api.delete(
+                `/transactions/${transactionId}`
+            );
+
+            await fetchTransactions();
+
+            if (
+                selectedTransaction?.id === transactionId
+            ) {
+                setSelectedTransaction(null);
+            }
         } catch (error) {
             setError(
                 error.response?.data?.error ||
                 "Failed to delete transaction"
             );
+        } finally {
+            setDeletingTransactionId(null);
         }
     }
 
