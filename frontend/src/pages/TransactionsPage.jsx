@@ -35,6 +35,8 @@ function TransactionsPage() {
     const [transactions, setTransactions] = useState([]);
     const [error, setError] = useState("");
     const [editingTransaction, setEditingTransaction] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+
 
     // Pagination
     const [page, setPage] = useState(1);
@@ -56,6 +58,8 @@ function TransactionsPage() {
     });
 
     async function fetchTransactions() {
+        setIsLoading(true);
+
         try {
             setError("");
 
@@ -78,12 +82,16 @@ function TransactionsPage() {
                 error.response?.data?.error ||
                 "Failed to load transactions"
             );
+        } finally {
+            setIsLoading(false);
         }
     }
     useEffect(() => {
         let isCurrent = true;
 
         async function loadTransactions() {
+            setIsLoading(true);
+
             try {
                 const data = await getTransactions(
                     page,
@@ -113,6 +121,10 @@ function TransactionsPage() {
                     error.response?.data?.error ||
                     "Failed to load transactions"
                 );
+            } finally {
+                if (isCurrent) {
+                    setIsLoading(false);
+                }
             }
         }
 
@@ -290,113 +302,118 @@ function TransactionsPage() {
                         </p>
                     )}
 
-                    {transactions.length === 0 ? (
+                    {isLoading ? (
                         <p className="empty-state">
-                            No transactions found.
+                            Loading Transactions...
                         </p>
-                    ) : (
-                        <div className="table-wrapper">
-                            <table className="transactions-table">
-                                <thead>
-                                    <tr>
-                                        <th>Type</th>
-                                        <th>Amount</th>
-                                        <th>Category</th>
-                                        <th>Payment Method</th>
-                                        <th>Date</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody>
-                                    {transactions.map((transaction) => (
-                                        <tr
-                                            key={transaction.id}
-                                            className={
-                                                editingTransaction?.id === transaction.id
-                                                    ? ""
-                                                    : "clickable-row"
-                                            }
-                                            onClick={() => {
-                                                if (editingTransaction?.id !== transaction.id) {
-                                                    setSelectedTransaction(transaction);
-                                                }
-                                            }}
-                                        >
-                                            {editingTransaction?.id === transaction.id ? (
-                                                <td colSpan="6">
-                                                    <EditTransactionForm
-                                                        transaction={transaction}
-                                                        onTransactionUpdated={async () => {
-                                                            await fetchTransactions();
-                                                            setEditingTransaction(null);
-                                                        }}
-                                                        onCancel={() => {
-                                                            setEditingTransaction(null);
-                                                        }}
-                                                    />
-                                                </td>
-                                            ) : (
-                                                <>
-                                                    <td>
-                                                        <span
-                                                            className={`transaction-type ${transaction.type}`}
-                                                        >
-                                                            {transaction.type}
-                                                        </span>
-                                                    </td>
-
-                                                    <td className="transaction-amount">
-                                                        {formatCurrency(
-                                                            transaction.amount,
-                                                            defaultCurrency
-                                                        )}
-                                                    </td>
-
-                                                    <td>
-                                                        {transaction.category || "Uncategorized"}
-                                                    </td>
-
-                                                    <td>
-                                                        {transaction.payment_method || "-"}
-                                                    </td>
-
-                                                    <td>
-                                                        {transaction.transaction_date}
-                                                    </td>
-
-
-                                                    <td>
-                                                        <div className="table-actions">
-                                                            <button
-                                                                className="table-action-button"
-                                                                onClick={(event) => {
-                                                                    event.stopPropagation();
-                                                                    setEditingTransaction(transaction);
-                                                                }}
-                                                            >
-                                                                Edit
-                                                            </button>
-
-                                                            <button
-                                                                className="table-action-button danger"
-                                                                onClick={(event) => {
-                                                                    event.stopPropagation();
-                                                                    handleDelete(transaction.id);
-                                                                }}
-                                                            >
-                                                                Delete
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </>
-                                            )}
+                    ) : transactions.length === 0 ?
+                        (
+                            <p className="empty-state">
+                                No transactions found.
+                            </p>
+                        ) : (
+                            <div className="table-wrapper">
+                                <table className="transactions-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Amount</th>
+                                            <th>Category</th>
+                                            <th>Payment Method</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                    </thead>
+
+                                    <tbody>
+                                        {transactions.map((transaction) => (
+                                            <tr
+                                                key={transaction.id}
+                                                className={
+                                                    editingTransaction?.id === transaction.id
+                                                        ? ""
+                                                        : "clickable-row"
+                                                }
+                                                onClick={() => {
+                                                    if (editingTransaction?.id !== transaction.id) {
+                                                        setSelectedTransaction(transaction);
+                                                    }
+                                                }}
+                                            >
+                                                {editingTransaction?.id === transaction.id ? (
+                                                    <td colSpan="6">
+                                                        <EditTransactionForm
+                                                            transaction={transaction}
+                                                            onTransactionUpdated={async () => {
+                                                                await fetchTransactions();
+                                                                setEditingTransaction(null);
+                                                            }}
+                                                            onCancel={() => {
+                                                                setEditingTransaction(null);
+                                                            }}
+                                                        />
+                                                    </td>
+                                                ) : (
+                                                    <>
+                                                        <td>
+                                                            <span
+                                                                className={`transaction-type ${transaction.type}`}
+                                                            >
+                                                                {transaction.type}
+                                                            </span>
+                                                        </td>
+
+                                                        <td className="transaction-amount">
+                                                            {formatCurrency(
+                                                                transaction.amount,
+                                                                defaultCurrency
+                                                            )}
+                                                        </td>
+
+                                                        <td>
+                                                            {transaction.category || "Uncategorized"}
+                                                        </td>
+
+                                                        <td>
+                                                            {transaction.payment_method || "-"}
+                                                        </td>
+
+                                                        <td>
+                                                            {transaction.transaction_date}
+                                                        </td>
+
+
+                                                        <td>
+                                                            <div className="table-actions">
+                                                                <button
+                                                                    className="table-action-button"
+                                                                    onClick={(event) => {
+                                                                        event.stopPropagation();
+                                                                        setEditingTransaction(transaction);
+                                                                    }}
+                                                                >
+                                                                    Edit
+                                                                </button>
+
+                                                                <button
+                                                                    className="table-action-button danger"
+                                                                    onClick={(event) => {
+                                                                        event.stopPropagation();
+                                                                        handleDelete(transaction.id);
+                                                                    }}
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </>
+                                                )}
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                 </section>
 
                 <div className="pagination">
@@ -515,9 +532,9 @@ function TransactionsPage() {
                                 {selectedTransaction.notes ||
                                     "No note for this transaction."}
                             </p>
-                            
+
                         </div>
-                        
+
                     </div>
                 </div>
             )}
