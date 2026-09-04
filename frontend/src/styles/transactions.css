@@ -21,6 +21,12 @@
     color: #6b7280;
 }
 
+.transaction-form-card,
+.filters-card,
+.transactions-table-card {
+    min-width: 0;
+}
+
 /* ---------- Create transaction ---------- */
 
 .transaction-form-card {
@@ -373,6 +379,7 @@
     font-size: 13px;
     font-weight: 500;
 }
+
 /* ---------- Clickable transaction rows ---------- */
 
 .clickable-row {
@@ -527,4 +534,126 @@
     line-height: 1.6;
 
     white-space: pre-wrap;
+}
+
+/* ---------- Responsive Transactions ---------- */
+
+@media (max-width: 1024px) {
+    .transaction-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .filters-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .transactions-table {
+        min-width: 760px;
+    }
+}
+
+@media (max-width: 768px) {
+    .transactions-header h1 {
+        font-size: 28px;
+    }
+
+    .transaction-form-card,
+    .filters-card,
+    .transactions-table-card {
+        padding: 20px;
+    }
+
+    .transaction-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .transaction-form-actions,
+    .filters-actions {
+        justify-content: stretch;
+    }
+
+    .transaction-form-actions .primary-button {
+        width: 100%;
+    }
+
+    .filters-actions {
+        flex-direction: column;
+    }
+
+    .filters-actions .primary-button,
+    .filters-actions .secondary-button {
+        width: 100%;
+    }
+
+    .transaction-details-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .transaction-modal {
+        max-height: calc(100vh - 32px);
+        overflow-y: auto;
+    }
+
+    .modal-overlay {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .transactions-header {
+        margin-bottom: 24px;
+    }
+
+    .transactions-header h1 {
+        font-size: 24px;
+    }
+
+    .transaction-form-card,
+    .filters-card,
+    .transactions-table-card {
+        padding: 16px;
+    }
+
+
+    .transaction-form-grid,
+    .filters-grid {
+        gap: 14px;
+    }
+
+    .transactions-table th {
+        padding: 10px 12px;
+    }
+
+    .transactions-table td {
+        padding: 12px;
+    }
+
+    .pagination {
+        gap: 8px;
+    }
+
+    .pagination-button {
+        padding: 8px 10px;
+    }
+
+    .pagination-info {
+        font-size: 12px;
+    }
+
+    .transaction-modal {
+        padding: 18px;
+    }
+
+    .modal-header {
+        margin-bottom: 20px;
+    }
+
+    .transaction-note {
+        margin-top: 20px;
+    }
 }

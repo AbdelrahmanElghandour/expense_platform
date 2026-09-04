@@ -11,8 +11,7 @@ function RegisterPage() {
     const [currency, setCurrency] = useState("");
     const [currencies, setCurrencies] = useState([]);
     const [error, setError] = useState("");
-    const [, setIsLoadingCurrencies] =
-        useState(true);
+    const [, setIsLoadingCurrencies] = useState(true);
 
     const navigate = useNavigate();
 

@@ -1,5 +1,4 @@
 import { NavLink, useNavigate } from "react-router-dom";
-
 import { useAuth } from "../../context/useAuth";
 
 function Sidebar() {
@@ -18,7 +17,6 @@ function Sidebar() {
             </div>
 
             <nav className="sidebar-nav">
-                {/* Nav link knows whether its destination is the current Page */}
                 <NavLink
                     to="/dashboard"
                     className={({ isActive }) =>
@@ -40,15 +38,19 @@ function Sidebar() {
                 >
                     Transactions
                 </NavLink>
+
+                <NavLink
+                    to="/settings"
+                    className={({ isActive }) =>
+                        isActive
+                            ? "sidebar-link active"
+                            : "sidebar-link"
+                    }
+                >
+                    Settings
+                </NavLink>
             </nav>
-            <NavLink
-                to="/settings"
-                className={({ isActive }) =>
-                    isActive ? "sidebar-link active" : "sidebar-link"
-                }
-            >
-                Settings
-            </NavLink>
+
             <button
                 className="sidebar-logout"
                 onClick={handleLogout}

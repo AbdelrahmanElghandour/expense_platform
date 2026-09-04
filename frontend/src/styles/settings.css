@@ -130,7 +130,7 @@
     cursor: not-allowed;
 }
 
-.settings-card + .settings-card {
+.settings-card+.settings-card {
     margin-top: 24px;
 }
 
@@ -159,4 +159,60 @@
 .delete-account-button:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+}
+
+/* ---------- Responsive Settings ---------- */
+
+.settings-card {
+    min-width: 0;
+}
+
+@media (max-width: 768px) {
+    .settings-header h1 {
+        font-size: 28px;
+    }
+
+    .settings-card {
+        padding: 20px;
+    }
+
+    .settings-actions {
+        justify-content: stretch;
+    }
+
+    .settings-save-button,
+    .delete-account-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .settings-header {
+        margin-bottom: 24px;
+    }
+
+    .settings-header h1 {
+        font-size: 24px;
+    }
+
+    .settings-card {
+        padding: 16px;
+    }
+
+    .settings-card-header h2 {
+        font-size: 18px;
+    }
+
+    .settings-card+.settings-card {
+        margin-top: 16px;
+    }
+
+    .settings-form {
+        gap: 16px;
+    }
+
+    .settings-field input,
+    .settings-field select {
+        padding: 10px;
+    }
 }
