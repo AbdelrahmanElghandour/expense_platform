@@ -1,1 +1,5 @@
-node_modules/.env
+node_modules/
+.env
+workflow.md
+.env.test
+current-schema
