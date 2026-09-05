@@ -1,9 +1,8 @@
 const allowedPaymentMethods = [
-    "Cash",
-    "Credit Card",
-    "Debit Card",
-    "Bank Transfer",
-    "Other"
+    "cash",
+    "credit card",
+    "debit card",
+    "bank transfer"
 ];
 
 function isValidDateString(value) {
@@ -121,7 +120,7 @@ function normalizeTransactionData(data) {
 
         payment_method:
             typeof data.payment_method === "string"
-                ? data.payment_method.trim()
+                ? data.payment_method.trim().toLowerCase()
                 : data.payment_method,
 
         notes:
