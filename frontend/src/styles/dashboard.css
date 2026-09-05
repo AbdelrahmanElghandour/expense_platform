@@ -332,3 +332,106 @@
 .dashboard-panel {
     min-width: 0;
 }
+
+.overview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    margin-bottom: 16px;
+}
+
+.overview-header h2 {
+    margin: 0;
+}
+
+.custom-date-range {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    margin-bottom: 16px;
+}
+
+.custom-date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.custom-date-field label {
+    color: #6b7280;
+
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.custom-date-field input {
+    padding: 8px 10px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+
+    background-color: white;
+    color: #374151;
+
+    font-size: 13px;
+}
+
+.custom-date-field input:focus {
+    border-color: #6b7280;
+    outline: none;
+}
+
+.date-range-error,
+.dashboard-error {
+    margin: 0;
+
+    color: #b91c1c;
+
+    font-size: 13px;
+}
+
+.date-range-error {
+    width: 100%;
+}
+
+
+@media (max-width: 768px) {
+    .overview-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .overview-header .period-select {
+        width: 100%;
+    }
+
+    .custom-date-range {
+        width: 100%;
+    }
+
+    .custom-date-field {
+        flex: 1;
+        min-width: 160px;
+    }
+
+    .custom-date-field input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
+
+
+@media (max-width: 480px) {
+    .custom-date-range {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .custom-date-field {
+        width: 100%;
+    }
+}

@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import api from "../api/api";
 import AppLayout from "../components/layout/AppLayout";
 import SummaryCard from "../components/dashboard/SummaryCard";
-import "../styles/dashboard.css";
 import MonthlyTrendChart from "../components/dashboard/MonthlyTrendChart";
 import CategoryDonutChart from "../components/dashboard/CategoryDonutChart";
 import { useAuth } from "../context/useAuth";
+
+import "../styles/dashboard.css";
+
 
 function formatDate(date) {
     const year = date.getFullYear();
@@ -22,7 +24,8 @@ function formatDate(date) {
     return `${year}-${month}-${day}`;
 }
 
-function getCategoryDateRange(period) {
+
+function getDateRange(period, customStartDate, customEndDate) {
     const now = new Date();
 
     if (period === "all") {
@@ -93,30 +96,158 @@ function getCategoryDateRange(period) {
         };
     }
 
+    if (period === "custom") {
+        if (!customStartDate || !customEndDate) {
+            return null;
+        }
+
+        if (customStartDate > customEndDate) {
+            return null;
+        }
+
+        return {
+            startDate: customStartDate,
+            endDate: customEndDate
+        };
+    }
+
     return {};
 }
 
+
+function PeriodSelect({ value, onChange }) {
+    return (
+        <select
+            className="period-select"
+            value={value}
+            onChange={onChange}
+        >
+            <option value="all">All Time</option>
+            <option value="thisMonth">This Month</option>
+            <option value="lastMonth">Last Month</option>
+            <option value="last3Months">Last 3 Months</option>
+            <option value="thisYear">This Year</option>
+            <option value="custom">Custom</option>
+        </select>
+    );
+}
+
+
+function CustomDateRange({
+    startDate,
+    endDate,
+    onStartDateChange,
+    onEndDateChange
+}) {
+    const invalidRange =
+        startDate &&
+        endDate &&
+        startDate > endDate;
+
+    return (
+        <div className="custom-date-range">
+            <div className="custom-date-field">
+                <label>From</label>
+
+                <input
+                    type="date"
+                    value={startDate}
+                    onChange={onStartDateChange}
+                />
+            </div>
+
+            <div className="custom-date-field">
+                <label>To</label>
+
+                <input
+                    type="date"
+                    value={endDate}
+                    onChange={onEndDateChange}
+                />
+            </div>
+
+            {invalidRange && (
+                <p className="date-range-error">
+                    Start date cannot be after end date.
+                </p>
+            )}
+        </div>
+    );
+}
+
+
 function DashboardPage() {
     const { defaultCurrency } = useAuth();
+
     const [summary, setSummary] = useState(null);
     const [categoryAnalytics, setCategoryAnalytics] = useState(null);
     const [trends, setTrends] = useState([]);
-    const [error, setError] = useState("");
-    const [categoryPeriod, setCategoryPeriod] = useState("all");
-    const [isDashboardLoading, setIsDashboardLoading] = useState(true);
 
+    const [summaryPeriod, setSummaryPeriod] = useState("all");
+    const [summaryStartDate, setSummaryStartDate] = useState("");
+    const [summaryEndDate, setSummaryEndDate] = useState("");
+
+    const [categoryPeriod, setCategoryPeriod] = useState("all");
+    const [categoryStartDate, setCategoryStartDate] = useState("");
+    const [categoryEndDate, setCategoryEndDate] = useState("");
+
+    const [isSummaryLoading, setIsSummaryLoading] = useState(true);
+    const [isTrendsLoading, setIsTrendsLoading] = useState(true);
     const [isCategoryLoading, setIsCategoryLoading] = useState(true);
 
+    const [summaryError, setSummaryError] = useState("");
+    const [trendsError, setTrendsError] = useState("");
+    const [categoryError, setCategoryError] = useState("");
+
+
     useEffect(() => {
-        async function fetchDashboardData() {
-            setIsDashboardLoading(true);
+        async function fetchSummary() {
+            const params = getDateRange(
+                summaryPeriod,
+                summaryStartDate,
+                summaryEndDate
+            );
+
+            if (params === null) {
+                setIsSummaryLoading(false);
+                return;
+            }
+
+            setIsSummaryLoading(true);
+            setSummaryError("");
 
             try {
-                const summaryResponse = await api.get(
-                    "/analytics/summary"
+                const response = await api.get(
+                    "/analytics/summary",
+                    { params }
                 );
 
-                const trendsResponse = await api.get(
+                setSummary(response.data);
+            } catch (error) {
+                setSummaryError(
+                    error.response?.data?.error ||
+                    "Failed to fetch summary"
+                );
+            } finally {
+                setIsSummaryLoading(false);
+            }
+        }
+
+        fetchSummary();
+    }, [
+        summaryPeriod,
+        summaryStartDate,
+        summaryEndDate
+    ]);
+
+
+    useEffect(() => {
+        async function fetchTrends() {
+            setIsTrendsLoading(true);
+            setTrendsError("");
+
+            try {
+                const response = await api.get(
                     "/analytics/trends",
                     {
                         params: {
@@ -125,28 +256,38 @@ function DashboardPage() {
                     }
                 );
 
-                setSummary(summaryResponse.data);
-                setTrends(trendsResponse.data.trends);
+                setTrends(response.data.trends);
             } catch (error) {
-                setError(
+                setTrendsError(
                     error.response?.data?.error ||
-                    "Failed to fetch dashboard data"
+                    "Failed to fetch trends"
                 );
             } finally {
-                setIsDashboardLoading(false);
+                setIsTrendsLoading(false);
             }
         }
 
-        fetchDashboardData();
+        fetchTrends();
     }, []);
+
+
     useEffect(() => {
         async function fetchCategoryAnalytics() {
+            const params = getDateRange(
+                categoryPeriod,
+                categoryStartDate,
+                categoryEndDate
+            );
+
+            if (params === null) {
+                setIsCategoryLoading(false);
+                return;
+            }
+
             setIsCategoryLoading(true);
+            setCategoryError("");
 
             try {
-                const params =
-                    getCategoryDateRange(categoryPeriod);
-
                 const response = await api.get(
                     "/analytics/categories",
                     { params }
@@ -154,7 +295,7 @@ function DashboardPage() {
 
                 setCategoryAnalytics(response.data);
             } catch (error) {
-                setError(
+                setCategoryError(
                     error.response?.data?.error ||
                     "Failed to fetch category analytics"
                 );
@@ -164,7 +305,11 @@ function DashboardPage() {
         }
 
         fetchCategoryAnalytics();
-    }, [categoryPeriod]);
+    }, [
+        categoryPeriod,
+        categoryStartDate,
+        categoryEndDate
+    ]);
 
 
     return (
@@ -175,13 +320,40 @@ function DashboardPage() {
                     <p>Overview of your finances</p>
                 </header>
 
-                {error && <p>{error}</p>}
 
                 {/* Summary */}
                 <section>
-                    <h2>Overview</h2>
+                    <div className="overview-header">
+                        <h2>Overview</h2>
 
-                    {isDashboardLoading ? (
+                        <PeriodSelect
+                            value={summaryPeriod}
+                            onChange={(event) =>
+                                setSummaryPeriod(event.target.value)
+                            }
+                        />
+                    </div>
+
+                    {summaryPeriod === "custom" && (
+                        <CustomDateRange
+                            startDate={summaryStartDate}
+                            endDate={summaryEndDate}
+                            onStartDateChange={(event) =>
+                                setSummaryStartDate(event.target.value)
+                            }
+                            onEndDateChange={(event) =>
+                                setSummaryEndDate(event.target.value)
+                            }
+                        />
+                    )}
+
+                    {summaryError && (
+                        <p className="dashboard-error">
+                            {summaryError}
+                        </p>
+                    )}
+
+                    {isSummaryLoading ? (
                         <p>Loading summary...</p>
                     ) : summary ? (
                         <div className="summary-grid">
@@ -210,7 +382,9 @@ function DashboardPage() {
                     )}
                 </section>
 
+
                 <hr />
+
 
                 <div className="analytics-grid">
 
@@ -223,7 +397,13 @@ function DashboardPage() {
                             </div>
                         </div>
 
-                        {isDashboardLoading ? (
+                        {trendsError && (
+                            <p className="dashboard-error">
+                                {trendsError}
+                            </p>
+                        )}
+
+                        {isTrendsLoading ? (
                             <p>Loading trends...</p>
                         ) : trends.length === 0 ? (
                             <p className="empty-state">
@@ -237,6 +417,7 @@ function DashboardPage() {
                         )}
                     </section>
 
+
                     {/* Expenses by Category */}
                     <section className="dashboard-panel">
                         <div className="panel-header panel-header-row">
@@ -245,20 +426,32 @@ function DashboardPage() {
                                 <p>Where your money is going</p>
                             </div>
 
-                            <select
-                                className="period-select"
+                            <PeriodSelect
                                 value={categoryPeriod}
                                 onChange={(event) =>
                                     setCategoryPeriod(event.target.value)
                                 }
-                            >
-                                <option value="all">All Time</option>
-                                <option value="thisMonth">This Month</option>
-                                <option value="lastMonth">Last Month</option>
-                                <option value="last3Months">Last 3 Months</option>
-                                <option value="thisYear">This Year</option>
-                            </select>
+                            />
                         </div>
+
+                        {categoryPeriod === "custom" && (
+                            <CustomDateRange
+                                startDate={categoryStartDate}
+                                endDate={categoryEndDate}
+                                onStartDateChange={(event) =>
+                                    setCategoryStartDate(event.target.value)
+                                }
+                                onEndDateChange={(event) =>
+                                    setCategoryEndDate(event.target.value)
+                                }
+                            />
+                        )}
+
+                        {categoryError && (
+                            <p className="dashboard-error">
+                                {categoryError}
+                            </p>
+                        )}
 
                         {isCategoryLoading ? (
                             <p>Loading category analytics...</p>
@@ -270,7 +463,9 @@ function DashboardPage() {
                             ) : (
                                 <CategoryDonutChart
                                     categories={categoryAnalytics.categories}
-                                    totalExpenses={categoryAnalytics.totalExpenses}
+                                    totalExpenses={
+                                        categoryAnalytics.totalExpenses
+                                    }
                                     currency={defaultCurrency}
                                 />
                             )
