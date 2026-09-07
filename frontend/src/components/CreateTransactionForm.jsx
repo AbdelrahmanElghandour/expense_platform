@@ -1,5 +1,7 @@
 import { useState } from "react";
 import api from "../api/api";
+import { paymentMethods } from "../constants/paymentMethods";
+
 
 function CreateTransactionForm({ onTransactionCreated }) {
     const [error, setError] = useState("");
@@ -100,13 +102,25 @@ function CreateTransactionForm({ onTransactionCreated }) {
                 <div className="form-field">
                     <label>Payment Method</label>
 
-                    <input
-                        type="text"
+                    <select
                         value={payment_method}
                         onChange={(event) =>
                             setPaymentMethod(event.target.value)
                         }
-                    />
+                    >
+                        <option value="" disabled>
+                            Select payment method
+                        </option>
+
+                        {paymentMethods.map((method) => (
+                            <option
+                                key={method.value}
+                                value={method.value}
+                            >
+                                {method.label}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="form-field">
@@ -139,6 +153,7 @@ function CreateTransactionForm({ onTransactionCreated }) {
                     {error}
                 </p>
             )}
+
             {success && (
                 <p className="form-success">
                     {success}

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import api from "../api/api";
+import { paymentMethods } from "../constants/paymentMethods";
 
 function EditTransactionForm({
     transaction,
@@ -53,6 +54,7 @@ function EditTransactionForm({
             setIsSubmitting(false);
         }
     }
+
     return (
         <form
             className="edit-transaction-form"
@@ -112,13 +114,25 @@ function EditTransactionForm({
                 <div className="form-field">
                     <label>Payment Method</label>
 
-                    <input
-                        type="text"
+                    <select
                         value={paymentMethod}
                         onChange={(event) =>
                             setPaymentMethod(event.target.value)
                         }
-                    />
+                    >
+                        <option value="" disabled>
+                            Select payment method
+                        </option>
+
+                        {paymentMethods.map((method) => (
+                            <option
+                                key={method.value}
+                                value={method.value}
+                            >
+                                {method.label}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="form-field">
