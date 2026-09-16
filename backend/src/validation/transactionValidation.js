@@ -115,7 +115,7 @@ function normalizeTransactionData(data) {
 
         category:
             typeof data.category === "string"
-                ? data.category.trim()
+                ? data.category.trim().toLowerCase()
                 : data.category,
 
         payment_method:
